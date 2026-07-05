@@ -41,6 +41,14 @@ button {
   transition: 0.3s;
 }
 
+.buttons {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 button:hover {
   background: #1E40AF;
 }
+
