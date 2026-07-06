@@ -1,15 +1,15 @@
 import "./App.css";
+import Hero from "./components/Hero";
+import ActionButton from "./components/ActionButton";
 
 function App() {
   return (
     <div className="app">
-      <h1>⚖️ LawMate AI</h1>
-      <p>AI-Powered Legal Assistant for Indian Law</p>
-
+      <Hero />
     <div className="buttons">
-      <button>Ask a Legal Question</button>
-      <button>Upload Document</button>
-      <button>Generate Complaint</button>
+      <ActionButton text="Ask a Legal Question" />
+      <ActionButton text="Upload Document" />
+      <ActionButton text="Generate Complaint" />
     </div>
     </div>
   );
