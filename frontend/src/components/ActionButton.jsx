@@ -1,6 +1,10 @@
 function ActionButton(props) {
   return (
-    <button>{props.text}</button>
+    <button
+      style={{ backgroundColor: props.color }}
+    >
+      {props.text}
+    </button>
   );
 }
 
