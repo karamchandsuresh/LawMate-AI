@@ -1,5 +1,23 @@
+/* ==========================================
+              APP LAYOUT
+========================================== */
+
 .app {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+
+  background: #f5f7fb;
+}
+
+
+/* ==========================================
+              HERO LAYOUT
+========================================== */
+
+.hero-section {
+  flex: 1;
+
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -7,21 +25,36 @@
 
   text-align: center;
   padding: 20px;
-
-  background: #f5f7fb;
 }
+
+
+/* ==========================================
+              HERO SECTION
+========================================== */
 
 h1 {
   font-size: 3rem;
-  color: #0F172A;   
+  color: #0F172A;
   margin-bottom: 10px;
 }
 
 p {
   font-size: 1.2rem;
-  color: #4B5563;  
+  color: #4B5563;
   margin-bottom: 35px;
   max-width: 700px;
+}
+
+
+/* ==========================================
+            ACTION BUTTONS
+========================================== */
+
+.buttons {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 button {
@@ -32,23 +65,54 @@ button {
   border: none;
   border-radius: 30px;
 
-  background: #2563EB;
   color: white;
-
   font-size: 16px;
   cursor: pointer;
 
   transition: 0.3s;
 }
 
-.buttons {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-  justify-content: center;
-}
-
 button:hover {
-  background: #1E40AF;
+  transform: translateY(-2px);
 }
 
+
+/* ==========================================
+              NAVBAR STYLES
+========================================== */
+
+.navbar {
+  width: 100%;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 20px 40px;
+
+  background: white;
+  box-sizing: border-box;
+}
+
+.logo {
+  color: #0F172A;
+  font-size: 1.8rem;
+  font-weight: bold;
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #374151;
+  font-weight: 500;
+
+  transition: 0.3s;
+}
+
+.nav-links a:hover {
+  color: #2563EB;
+}
