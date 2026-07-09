@@ -1,34 +1,30 @@
 import "./App.css";
+
 import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import ActionButton from "./components/ActionButton";
+
+import Home from "./pages/Home";
+import Chat from "./pages/Chat";
+import Upload from "./pages/Upload";
+import About from "./pages/About";
+
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
   return (
-    <div className="app">
-      <Navbar />
+    <BrowserRouter>
+      <div className="app">
+        <Navbar />
 
-      <main className="hero-section">
-        <Hero />
-
-        <div className="buttons">
-          <ActionButton
-            text="Ask a Legal Question"
-            color="#2563EB"
-          />
-
-          <ActionButton
-            text="Upload Document"
-            color="#16A34A"
-          />
-
-          <ActionButton
-            text="Generate Complaint"
-            color="#DC2626"
-          />
-        </div>
-      </main>
-    </div>
+        <main className="hero-section">
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/chat" element={<Chat />} />
+            <Route path="/upload" element={<Upload />} />
+            <Route path="/about" element={<About />} />
+          </Routes>
+        </main>
+      </div>
+    </BrowserRouter>
   );
 }
 

@@ -1,13 +1,15 @@
+import { Link } from "react-router-dom";
+
 function Navbar() {
   return (
     <nav className="navbar">
       <h2 className="logo">⚖️ LawMate AI</h2>
 
       <div className="nav-links">
-        <a href="#">Home</a>
-        <a href="#">Chat</a>
-        <a href="#">Upload</a>
-        <a href="#">About</a>
+        <Link to="/">Home</Link>
+        <Link to="/chat">Chat</Link>
+        <Link to="/upload">Upload</Link>
+        <Link to="/about">About</Link>
       </div>
     </nav>
   );
