@@ -2,6 +2,7 @@ function ActionButton(props) {
   return (
     <button
       style={{ backgroundColor: props.color }}
+      onClick={props.onClick}
     >
       {props.text}
     </button>
