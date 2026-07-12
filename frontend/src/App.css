@@ -240,3 +240,199 @@ button:hover {
 .chat-input button {
   width: 120px;
 }
+
+
+/* ===========================
+   Upload Page
+=========================== */
+
+.upload-page {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.upload-box {
+  width: 70%;
+  max-width: 700px;
+  margin: 40px auto;
+  padding: 50px;
+  border: 2px dashed #2563EB;
+  border-radius: 15px;
+  background: #F8FAFC;
+  transition: 0.3s;
+}
+
+.upload-box:hover {
+  background: #EFF6FF;
+}
+
+.upload-box h2 {
+  margin-bottom: 15px;
+  color: #1E3A8A;
+}
+
+.upload-box p {
+  margin: 15px 0;
+}
+
+.upload-box button {
+  width: 200px;
+}
+
+.upload-note {
+  margin-top: 20px;
+  font-size: 14px;
+  color: #6B7280;
+}
+
+.supported-files {
+  margin-top: 40px;
+}
+
+.supported-files h3 {
+  color: #0F172A;
+}
+
+.supported-files p {
+  font-size: 18px;
+  color: #4B5563;
+}
+
+.security-note {
+  margin-top: 40px;
+  padding: 15px;
+  background: #ECFDF5;
+  border-left: 5px solid #16A34A;
+  border-radius: 8px;
+  color: #166534;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ===========================
+   About Page
+=========================== */
+
+.about-page {
+  max-width: 900px;
+  margin: auto;
+  padding: 40px 20px;
+}
+
+.about-page h1 {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.about-intro {
+  text-align: center;
+  font-size: 18px;
+  color: #4B5563;
+  margin-bottom: 40px;
+}
+
+.about-section {
+  background: white;
+  padding: 25px;
+  margin-bottom: 25px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+}
+
+.about-section h2 {
+  color: #1E3A8A;
+  margin-bottom: 15px;
+}
+
+.about-section p {
+  color: #4B5563;
+  line-height: 1.7;
+}
+
+.about-section ul {
+  padding-left: 20px;
+}
+
+.about-section li {
+  margin-bottom: 10px;
+}
+
+
+/* ===========================
+   Info Section
+=========================== */
+
+.info-section {
+  max-width: 1000px;
+  margin: 60px auto;
+  padding: 40px;
+  text-align: center;
+  background: #F8FAFC;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+.info-section h2 {
+  color: #1E3A8A;
+  margin-bottom: 15px;
+}
+
+.info-section p {
+  color: #4B5563;
+  font-size: 18px;
+  line-height: 1.7;
+  margin-bottom: 30px;
+}
+
+.languages {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.languages span {
+  background: white;
+  padding: 12px 20px;
+  border-radius: 30px;
+  border: 1px solid #CBD5E1;
+  font-weight: 600;
+  transition: 0.3s;
+  cursor: default;
+}
+
+.languages span:hover {
+  background: #2563EB;
+  color: white;
+  transform: translateY(-3px);
+}
+
+/* ===========================
+   Footer
+=========================== */
+
+.footer {
+  margin-top: 50px;
+  padding: 20px;
+  text-align: center;
+  background: #0F172A;
+  color: white;
+}
+
+.footer h3 {
+  color: white;
+  margin-bottom: 8px;
+  font-size: 22px;
+}
+
+.footer p {
+  margin: 5px 0;
+  font-size: 15px;
+}
+
+.footer-copy {
+  margin-top: 10px;
+  font-size: 13px;
+  color: #CBD5E1;
+}

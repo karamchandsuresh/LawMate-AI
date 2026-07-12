@@ -1,6 +1,7 @@
 import "./App.css";
 
 import Navbar from "./components/Navbar";
+import Footer from "./components/Footer";
 
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
@@ -23,6 +24,8 @@ function App() {
             <Route path="/about" element={<About />} />
           </Routes>
         </main>
+
+        <Footer />
       </div>
     </BrowserRouter>
   );
