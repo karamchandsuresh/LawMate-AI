@@ -1,12 +1,10 @@
-from flask import Flask
+from fastapi import FastAPI
 
-app = Flask(__name__)
+app = FastAPI()
 
-@app.route("/")
+
+@app.get("/")
 def home():
     return {
         "message": "Welcome to LawMate AI Backend!"
     }
-
-if __name__ == "__main__":
-    app.run(debug=True)
