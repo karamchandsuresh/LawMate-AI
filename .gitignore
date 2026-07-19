@@ -1,4 +1,6 @@
+# ==========================
 # Python
+# ==========================
 __pycache__/
 *.py[cod]
 *.pyo
@@ -8,9 +10,17 @@ __pycache__/
 backend/venv/
 
 # Environment Variables
-.env
+backend/.env
 
+# ==========================
+# Node
+# ==========================
+frontend/node_modules/
+frontend/dist/
+
+# ==========================
 # VS Code
+# ==========================
 .vscode/
 
 # macOS
@@ -19,8 +29,8 @@ backend/venv/
 # Logs
 *.log
 
-# Node
-frontend/node_modules/
+# Python cache
+.pytest_cache/
 
-# Build
-frontend/dist/
+# Jupyter
+.ipynb_checkpoints/

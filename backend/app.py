@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
-import google.generativeai as genai
+from google import genai
 import os
 
 # -----------------------------
@@ -23,9 +23,7 @@ print("Loaded API Key ends with:", api_key[-4:])
 # -----------------------------
 # Configure Gemini
 # -----------------------------
-genai.configure(api_key=api_key)
-
-model = genai.GenerativeModel("gemini-2.0-flash")
+client = genai.Client(api_key=api_key)
 
 # -----------------------------
 # FastAPI
@@ -64,7 +62,10 @@ def home():
 @app.post("/chat")
 def chat(request: ChatRequest):
 
-    response = model.generate_content(request.message)
+    response = client.models.generate_content(
+        model="gemini-flash-latest",
+        contents=request.message,
+    )
 
     return {
         "reply": response.text
