@@ -177,70 +177,207 @@ button:hover {
 .chat-page {
   text-align: center;
   padding: 40px 20px;
+  background: #F8FAFC;
+  min-height: 100vh;
 }
+
+.chat-page h1 {
+  color: #0F172A;
+  margin-bottom: 10px;
+}
+
+.chat-page p {
+  color: #64748B;
+  margin-bottom: 30px;
+}
+
+/* ===========================
+   Chat Container
+=========================== */
 
 .chat-container {
-  width: 80%;
+  width: 85%;
   max-width: 900px;
-  margin: 40px auto;
+  margin: auto;
 
-  background: white;
+  background: #FFFFFF;
 
-  border-radius: 15px;
+  border-radius: 18px;
 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  overflow: hidden;
 
-  padding: 20px;
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
 }
 
+/* ===========================
+   Messages
+=========================== */
+
 .chat-messages {
-  height: 400px;
-
-  border: 1px solid #E5E7EB;
-
-  border-radius: 10px;
-
-  padding: 20px;
+  height: 520px;
 
   overflow-y: auto;
 
-  text-align: left;
+  padding: 25px;
 
-  margin-bottom: 20px;
+  background: #F8FAFC;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 20px;
 }
+
+/* ===========================
+   Shared Bubble
+=========================== */
 
 .message {
-  background: #EFF6FF;
+  max-width: 75%;
 
-  padding: 15px;
+  padding: 16px 20px;
 
-  border-radius: 10px;
+  border-radius: 18px;
 
-  max-width: 70%;
+  line-height: 1.7;
+
+  word-break: break-word;
+
+  box-shadow: 0 3px 10px rgba(0,0,0,0.05);
 }
+
+/* ===========================
+   AI Bubble
+=========================== */
+
+.message.ai {
+  align-self: flex-start;
+
+  background: #FFFFFF;
+
+  color: #1E293B;
+
+  border: 1px solid #E5E7EB;
+
+  border-radius: 18px 18px 18px 6px;
+}
+
+/* ===========================
+   User Bubble
+=========================== */
+
+.message.user {
+  align-self: flex-end;
+
+  background: #F1F5F9;
+
+  color: #0F172A;
+
+  border: 1px solid #CBD5E1;
+
+  border-radius: 18px 18px 6px 18px;
+}
+
+/* ===========================
+   AI Response Formatting
+=========================== */
+
+.ai-response {
+  white-space: pre-wrap;
+
+  font-size: 15px;
+
+  line-height: 1.9;
+
+  color: #1E293B;
+}
+
+.ai-response h1,
+.ai-response h2,
+.ai-response h3 {
+  margin-top: 18px;
+  margin-bottom: 10px;
+}
+
+.ai-response p {
+  margin-bottom: 14px;
+}
+
+.ai-response ul {
+  padding-left: 22px;
+  margin: 10px 0;
+}
+
+.ai-response li {
+  margin-bottom: 8px;
+}
+
+.ai-response strong {
+  color: #0F172A;
+}
+
+/* ===========================
+   Input
+=========================== */
 
 .chat-input {
   display: flex;
 
   gap: 15px;
+
+  padding: 20px;
+
+  background: white;
+
+  border-top: 1px solid #E5E7EB;
 }
 
 .chat-input input {
   flex: 1;
 
-  padding: 15px;
+  padding: 14px 18px;
 
-  border: 1px solid #D1D5DB;
+  border: 1px solid #CBD5E1;
 
-  border-radius: 10px;
+  border-radius: 12px;
 
   font-size: 16px;
+
+  outline: none;
+
+  transition: 0.3s;
+}
+
+.chat-input input:focus {
+  border-color: #2563EB;
+
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
 }
 
 .chat-input button {
   width: 120px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #2563EB;
+
+  color: white;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.3s;
 }
 
+.chat-input button:hover {
+  background: #1D4ED8;
+}
 
 /* ===========================
    Upload Page

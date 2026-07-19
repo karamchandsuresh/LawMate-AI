@@ -2,21 +2,60 @@ import { useState } from "react";
 
 function Chat() {
   const [message, setMessage] = useState("");
-  const [reply, setReply] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      sender: "ai",
+      text: "Hello! 👋\n\nHow can I assist you with your legal question today?",
+    },
+  ]);
 
   const sendMessage = async () => {
-    const response = await fetch("http://127.0.0.1:8000/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        message: message,
-      }),
-    });
+    if (!message.trim()) return;
 
-    const data = await response.json();
-    setReply(data.reply);
+    const userMessage = message;
+
+    // Show user's message immediately
+    setMessages((prev) => [
+      ...prev,
+      {
+        sender: "user",
+        text: userMessage,
+      },
+    ]);
+
+    // Clear input
+    setMessage("");
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          message: userMessage,
+        }),
+      });
+
+      const data = await response.json();
+
+      // Show AI response
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: data.reply,
+        },
+      ]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "ai",
+          text: "❌ Sorry, something went wrong. Please try again.",
+        },
+      ]);
+    }
   };
 
   return (
@@ -30,16 +69,16 @@ function Chat() {
 
       <div className="chat-container">
         <div className="chat-messages">
-          <div className="message ai">
-            <p>Hello! 👋</p>
-            <p>How can I assist you with your legal question today?</p>
-          </div>
-
-          {reply && (
-            <div className="message ai">
-              <p>{reply}</p>
+          {messages.map((msg, index) => (
+            <div
+              key={index}
+              className={`message ${msg.sender}`}
+            >
+              <div className="ai-response">
+                {msg.text}
+              </div>
             </div>
-          )}
+          ))}
         </div>
 
         <div className="chat-input">
