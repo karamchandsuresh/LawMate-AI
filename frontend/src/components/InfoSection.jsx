@@ -1,3 +1,5 @@
+import "./InfoSection.css";
+
 function InfoSection() {
   return (
     <section className="info-section">

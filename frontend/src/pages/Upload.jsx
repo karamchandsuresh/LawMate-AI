@@ -1,3 +1,6 @@
+import "./Upload.css";
+
+
 function Upload() {
   return (
     <div className="upload-page">

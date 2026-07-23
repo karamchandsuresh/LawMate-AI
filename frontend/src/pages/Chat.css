@@ -1,0 +1,342 @@
+/* ==========================================
+              CHAT PAGE
+========================================== */
+
+
+/* ==========================================
+            CHAT PAGE LAYOUT
+========================================== */
+
+.chat-page {
+  text-align: center;
+
+  padding: 20px 20px 40px;
+
+  background: #F8FAFC;
+
+  min-height: 100vh;
+}
+
+
+/* ==========================================
+              CHAT HEADING
+========================================== */
+
+.chat-page h1 {
+  color: #0F172A;
+
+  margin: 10px 0 6px;
+
+  font-size: 2rem;
+}
+
+
+.chat-page > p {
+  color: #64748B;
+
+  margin: 0 auto 20px;
+
+  max-width: 650px;
+
+  line-height: 1.5;
+}
+
+
+/* ==========================================
+            CHAT CONTAINER
+========================================== */
+
+.chat-container {
+  width: 85%;
+
+  max-width: 900px;
+
+  margin: auto;
+
+  background: white;
+
+  border-radius: 18px;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+
+  overflow: hidden;
+}
+
+
+/* ==========================================
+            MESSAGES AREA
+========================================== */
+
+.chat-messages {
+  height: 420px;
+
+  overflow-y: auto;
+
+  padding: 25px;
+
+  background: #F8FAFC;
+
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 18px;
+}
+
+
+/* ==========================================
+          SHARED MESSAGE BUBBLE
+========================================== */
+
+.message {
+  max-width: 75%;
+
+  padding: 15px 18px;
+
+  border-radius: 18px;
+
+  font-size: 15px;
+
+  line-height: 1.7;
+
+  white-space: pre-wrap;
+
+  word-wrap: break-word;
+
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+
+/* ==========================================
+              AI MESSAGE
+========================================== */
+
+.message.ai {
+  align-self: flex-start;
+
+  background: #FFFFFF;
+
+  color: #1E293B;
+
+  border: 1px solid #E5E7EB;
+
+  border-radius: 18px 18px 18px 6px;
+}
+
+
+/* ==========================================
+            USER MESSAGE
+========================================== */
+
+.message.user {
+  align-self: flex-end;
+
+  background: #F1F5F9;
+
+  color: #0F172A;
+
+  border: 1px solid #CBD5E1;
+
+  border-radius: 18px 18px 6px 18px;
+}
+
+
+/* ==========================================
+          AI MARKDOWN RESPONSE
+========================================== */
+
+.ai-response {
+  line-height: 1.8;
+
+  font-size: 15px;
+
+  color: #1E293B;
+}
+
+
+.ai-response h1,
+.ai-response h2,
+.ai-response h3 {
+  margin-top: 10px;
+
+  margin-bottom: 10px;
+
+  color: #0F172A;
+}
+
+
+.ai-response p {
+  margin-bottom: 12px;
+}
+
+
+.ai-response ul,
+.ai-response ol {
+  margin: 10px 0 15px 20px;
+
+  padding-left: 15px;
+}
+
+
+.ai-response li {
+  margin-bottom: 6px;
+}
+
+
+.ai-response strong {
+  color: #0F172A;
+
+  font-weight: 700;
+}
+
+
+.ai-response hr {
+  border: none;
+
+  border-top: 1px solid #E2E8F0;
+
+  margin: 18px 0;
+}
+
+
+/* ==========================================
+            THINKING ANIMATION
+========================================== */
+
+.thinking {
+  display: flex;
+
+  align-items: center;
+
+  color: #64748B;
+
+  font-style: italic;
+
+  min-width: 220px;
+}
+
+
+.dots {
+  display: inline-flex;
+
+  width: 24px;
+
+  margin-left: 4px;
+
+  justify-content: flex-start;
+
+  gap: 2px;
+}
+
+
+.dots span {
+  animation: dotAnimation 1.4s infinite;
+
+  opacity: 0.2;
+}
+
+
+.dots span:nth-child(1) {
+  animation-delay: 0s;
+}
+
+
+.dots span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+
+.dots span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+
+@keyframes dotAnimation {
+
+  0% {
+    opacity: 0.2;
+  }
+
+  50% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0.2;
+  }
+
+}
+
+
+/* ==========================================
+              INPUT AREA
+========================================== */
+
+.chat-input {
+  display: flex;
+
+  gap: 15px;
+
+  padding: 20px;
+
+  background: white;
+
+  border-top: 1px solid #E5E7EB;
+}
+
+
+.chat-input input {
+  flex: 1;
+
+  padding: 14px 18px;
+
+  border: 1px solid #CBD5E1;
+
+  border-radius: 12px;
+
+  font-size: 16px;
+
+  outline: none;
+
+  transition: 0.3s;
+}
+
+
+.chat-input input:focus {
+  border-color: #2563EB;
+
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+
+.chat-input button {
+  width: 120px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #2563EB;
+
+  color: white;
+
+  font-size: 16px;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.3s;
+}
+
+
+.chat-input button:hover {
+  background: #1D4ED8;
+}
+
+
+.chat-input button:disabled {
+  background: #94A3B8;
+
+  cursor: not-allowed;
+}

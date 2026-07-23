@@ -1,0 +1,37 @@
+/* ===========================
+        HOME PAGE
+=========================== */
+
+
+/* ===========================
+        ACTION BUTTONS
+=========================== */
+
+.buttons {
+  display: flex;
+
+  gap: 20px;
+
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  margin: 30px 0 50px;
+}
+
+
+/* ===========================
+        FEATURES SECTION
+=========================== */
+
+.features {
+  display: flex;
+
+  gap: 25px;
+
+  flex-wrap: wrap;
+
+  justify-content: center;
+
+  padding: 40px 20px;
+}

@@ -1,0 +1,95 @@
+/* ==========================================
+              ABOUT PAGE
+========================================== */
+
+
+/* ==========================================
+            ABOUT PAGE LAYOUT
+========================================== */
+
+.about-page {
+  max-width: 900px;
+
+  margin: auto;
+
+  padding: 40px 20px;
+}
+
+
+/* ==========================================
+              ABOUT HEADING
+========================================== */
+
+.about-page h1 {
+  text-align: center;
+
+  margin-bottom: 20px;
+}
+
+
+/* ==========================================
+            ABOUT INTRODUCTION
+========================================== */
+
+.about-intro {
+  text-align: center;
+
+  font-size: 18px;
+
+  color: #4B5563;
+
+  margin-bottom: 40px;
+}
+
+
+/* ==========================================
+            ABOUT SECTIONS
+========================================== */
+
+.about-section {
+  background: white;
+
+  padding: 25px;
+
+  margin-bottom: 25px;
+
+  border-radius: 12px;
+
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ==========================================
+          SECTION HEADINGS
+========================================== */
+
+.about-section h2 {
+  color: #1E3A8A;
+
+  margin-bottom: 15px;
+}
+
+
+/* ==========================================
+            SECTION TEXT
+========================================== */
+
+.about-section p {
+  color: #4B5563;
+
+  line-height: 1.7;
+}
+
+
+/* ==========================================
+            SECTION LISTS
+========================================== */
+
+.about-section ul {
+  padding-left: 20px;
+}
+
+
+.about-section li {
+  margin-bottom: 10px;
+}

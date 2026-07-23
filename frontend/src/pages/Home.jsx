@@ -1,7 +1,10 @@
+import "./Home.css";
+
 import Hero from "../components/Hero";
 import ActionButton from "../components/ActionButton";
 import FeatureCard from "../components/FeatureCard";
 import InfoSection from "../components/InfoSection";
+
 import { useNavigate } from "react-router-dom";
 
 function Home() {

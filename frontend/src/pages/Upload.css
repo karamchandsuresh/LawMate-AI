@@ -1,0 +1,130 @@
+/* ==========================================
+              UPLOAD PAGE
+========================================== */
+
+
+/* ==========================================
+            UPLOAD PAGE LAYOUT
+========================================== */
+
+.upload-page {
+  text-align: center;
+
+  padding: 40px 20px;
+}
+
+
+/* ==========================================
+              UPLOAD BOX
+========================================== */
+
+.upload-box {
+  width: 70%;
+
+  max-width: 700px;
+
+  margin: 40px auto;
+
+  padding: 50px;
+
+  border: 2px dashed #2563EB;
+
+  border-radius: 15px;
+
+  background: #F8FAFC;
+
+  transition: 0.3s;
+}
+
+
+.upload-box:hover {
+  background: #EFF6FF;
+}
+
+
+/* ==========================================
+            UPLOAD BOX HEADING
+========================================== */
+
+.upload-box h2 {
+  margin-bottom: 15px;
+
+  color: #1E3A8A;
+}
+
+
+/* ==========================================
+            UPLOAD DESCRIPTION
+========================================== */
+
+.upload-box p {
+  margin: 15px 0;
+}
+
+
+/* ==========================================
+            BROWSE BUTTON
+========================================== */
+
+.upload-box button {
+  width: 200px;
+}
+
+
+/* ==========================================
+            UPLOAD NOTE
+========================================== */
+
+.upload-note {
+  margin-top: 20px;
+
+  font-size: 14px;
+
+  color: #6B7280;
+}
+
+
+/* ==========================================
+          SUPPORTED FILES
+========================================== */
+
+.supported-files {
+  margin-top: 40px;
+}
+
+
+.supported-files h3 {
+  color: #0F172A;
+}
+
+
+.supported-files p {
+  font-size: 18px;
+
+  color: #4B5563;
+}
+
+
+/* ==========================================
+            SECURITY NOTE
+========================================== */
+
+.security-note {
+  margin-top: 40px;
+
+  padding: 15px;
+
+  background: #ECFDF5;
+
+  border-left: 5px solid #16A34A;
+
+  border-radius: 8px;
+
+  color: #166534;
+
+  max-width: 700px;
+
+  margin-left: auto;
+
+  margin-right: auto;
+}

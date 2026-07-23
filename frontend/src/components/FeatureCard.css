@@ -1,0 +1,63 @@
+/* ==========================================
+            FEATURE CARD
+========================================== */
+
+
+/* ==========================================
+          FEATURE CARD LAYOUT
+========================================== */
+
+.feature-card {
+  width: 320px;
+
+  background: white;
+
+  padding: 30px;
+
+  border-radius: 15px;
+
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+  transition: 0.3s;
+
+  box-sizing: border-box;
+}
+
+
+/* ==========================================
+          FEATURE CARD HOVER
+========================================== */
+
+.feature-card:hover {
+  transform: translateY(-8px);
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+}
+
+
+/* ==========================================
+          FEATURE CARD HEADING
+========================================== */
+
+.feature-card h3 {
+  color: #0F172A;
+
+  margin-bottom: 15px;
+
+  font-size: 1.4rem;
+}
+
+
+/* ==========================================
+          FEATURE CARD DESCRIPTION
+========================================== */
+
+.feature-card p {
+  color: #4B5563;
+
+  line-height: 1.7;
+
+  font-size: 1rem;
+
+  margin-bottom: 0;
+}

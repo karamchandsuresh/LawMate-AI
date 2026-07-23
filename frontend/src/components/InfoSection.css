@@ -1,0 +1,95 @@
+/* ==========================================
+            INFO SECTION
+========================================== */
+
+
+/* ==========================================
+          INFO SECTION LAYOUT
+========================================== */
+
+.info-section {
+  max-width: 1000px;
+
+  margin: 60px auto;
+
+  padding: 40px;
+
+  text-align: center;
+
+  background: #F8FAFC;
+
+  border-radius: 15px;
+
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+
+/* ==========================================
+          INFO SECTION HEADING
+========================================== */
+
+.info-section h2 {
+  color: #1E3A8A;
+
+  margin-bottom: 15px;
+}
+
+
+/* ==========================================
+          INFO SECTION DESCRIPTION
+========================================== */
+
+.info-section p {
+  color: #4B5563;
+
+  font-size: 18px;
+
+  line-height: 1.7;
+
+  margin-bottom: 30px;
+}
+
+
+/* ==========================================
+            LANGUAGE LIST
+========================================== */
+
+.languages {
+  display: flex;
+
+  justify-content: center;
+
+  flex-wrap: wrap;
+
+  gap: 15px;
+}
+
+
+/* ==========================================
+          LANGUAGE ITEMS
+========================================== */
+
+.languages span {
+  background: white;
+
+  padding: 12px 20px;
+
+  border-radius: 30px;
+
+  border: 1px solid #CBD5E1;
+
+  font-weight: 600;
+
+  transition: 0.3s;
+
+  cursor: default;
+}
+
+
+.languages span:hover {
+  background: #2563EB;
+
+  color: white;
+
+  transform: translateY(-3px);
+}
