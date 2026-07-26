@@ -2,28 +2,34 @@
               GLOBAL APP LAYOUT
 ========================================== */
 
+#root {
+  width: 100%;
 
-/* ==========================================
-              APP CONTAINER
-========================================== */
+  min-height: 100vh;
+}
+
 
 .app {
+  width: 100%;
+
   min-height: 100vh;
 
   display: flex;
 
   flex-direction: column;
 
-  background: #F5F7FB;
+  background: #f5f7fb;
 }
 
 
 /* ==========================================
-              MAIN CONTENT
+              NORMAL PAGE CONTENT
 ========================================== */
 
 .hero-section {
   flex: 1;
+
+  width: 100%;
 
   display: flex;
 
@@ -34,6 +40,42 @@
   text-align: center;
 
   padding: 20px;
+
+  box-sizing: border-box;
+}
+
+
+/* ==========================================
+              CHAT MAIN AREA
+========================================== */
+
+.chat-main {
+  flex: 1;
+
+  width: 100%;
+
+  min-height: 0;
+
+  display: flex;
+
+  flex-direction: column;
+
+  padding: 0;
+
+  margin: 0;
+}
+
+
+/* ==========================================
+              CHAT APP MODE
+========================================== */
+
+.chat-app {
+  height: 100vh;
+
+  min-height: 100vh;
+
+  overflow: hidden;
 }
 
 
@@ -44,7 +86,7 @@
 h1 {
   font-size: 3rem;
 
-  color: #0F172A;
+  color: #0f172a;
 
   margin-bottom: 10px;
 }
@@ -57,7 +99,7 @@ h1 {
 p {
   font-size: 1.2rem;
 
-  color: #4B5563;
+  color: #4b5563;
 
   margin-bottom: 35px;
 

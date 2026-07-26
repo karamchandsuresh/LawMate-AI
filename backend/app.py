@@ -5,14 +5,18 @@ from dotenv import load_dotenv
 from google import genai
 import os
 
-# -----------------------------
-# Load Environment Variables
-# -----------------------------
+
+# ==========================================
+# LOAD ENVIRONMENT VARIABLES
+# ==========================================
+
 load_dotenv()
 
-# -----------------------------
-# Read API Key
-# -----------------------------
+
+# ==========================================
+# READ GEMINI API KEY
+# ==========================================
+
 api_key = os.getenv("GEMINI_API_KEY")
 
 if not api_key:
@@ -20,49 +24,74 @@ if not api_key:
 
 print("Loaded API Key ends with:", api_key[-4:])
 
-# -----------------------------
-# Configure Gemini
-# -----------------------------
+
+# ==========================================
+# CONFIGURE GEMINI
+# ==========================================
+
 client = genai.Client(api_key=api_key)
 
-# -----------------------------
-# FastAPI App
-# -----------------------------
+
+# ==========================================
+# FASTAPI APP
+# ==========================================
+
 app = FastAPI()
 
-# -----------------------------
-# Enable CORS
-# -----------------------------
+
+# ==========================================
+# ENABLE CORS
+# ==========================================
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ],
+
     allow_credentials=True,
+
     allow_methods=["*"],
+
     allow_headers=["*"],
 )
 
-# -----------------------------
-# Request Model
-# -----------------------------
+
+# ==========================================
+# REQUEST MODEL
+# ==========================================
+
 class ChatRequest(BaseModel):
+
     message: str
 
-# -----------------------------
-# Home Route
-# -----------------------------
+
+# ==========================================
+# HOME ROUTE
+# ==========================================
+
 @app.get("/")
 def home():
+
     return {
         "message": "Welcome to LawMate AI Backend!"
     }
 
-# -----------------------------
-# Chat Route
-# -----------------------------
+
+# ==========================================
+# CHAT ROUTE
+# ==========================================
+
 @app.post("/chat")
 def chat(request: ChatRequest):
 
+    print("Received message:", request.message)
+
+
     prompt = f"""
+
 You are LawMate AI, an intelligent legal assistant specializing in Indian law.
 
 Always answer using the following format.
@@ -98,13 +127,27 @@ Important Rules:
 User Question:
 
 {request.message}
+
 """
 
+
+    print("Sending request to Gemini...")
+
+
     response = client.models.generate_content(
+
         model="gemini-flash-latest",
+
         contents=prompt,
+
     )
 
+
+    print("Gemini response received!")
+
+
     return {
+
         "reply": response.text
+
     }
