@@ -6,10 +6,14 @@ __pycache__/
 *.pyo
 *.pyd
 
+# ==========================
 # Virtual Environment
+# ==========================
 backend/venv/
 
+# ==========================
 # Environment Variables
+# ==========================
 backend/.env
 
 # ==========================
@@ -23,14 +27,34 @@ frontend/dist/
 # ==========================
 .vscode/
 
+# ==========================
 # macOS
+# ==========================
 .DS_Store
 
+# ==========================
 # Logs
+# ==========================
 *.log
 
-# Python cache
+# ==========================
+# Python Cache
+# ==========================
 .pytest_cache/
 
+# ==========================
 # Jupyter
+# ==========================
 .ipynb_checkpoints/
+
+# ==========================
+# ChromaDB Generated Database
+# ==========================
+# Generated ChromaDB database/index files are kept locally.
+# Python scripts such as store_embeddings.py remain tracked.
+
+backend/data_pipeline/chroma_db/*.sqlite3
+backend/data_pipeline/chroma_db/*/
+
+# Ignore accidental/generated ChromaDB database under services
+backend/services/data_pipeline/chroma_db/
