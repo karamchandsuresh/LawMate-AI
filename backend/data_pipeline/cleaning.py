@@ -2,151 +2,326 @@ import os
 import re
 
 
-# ==========================================
-# PATHS
-# ==========================================
+# ============================================================
+# PATH CONFIGURATION
+# ============================================================
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BASE_DIR = os.path.dirname(
+    os.path.abspath(__file__)
+)
 
-RAW_DATA_DIR = os.path.join(BASE_DIR, "raw_data")
-CLEANED_DATA_DIR = os.path.join(BASE_DIR, "cleaned_data")
+RAW_DATA_DIR = os.path.join(
+    BASE_DIR,
+    "raw_data"
+)
+
+CLEANED_DATA_DIR = os.path.join(
+    BASE_DIR,
+    "cleaned_data"
+)
 
 
-# Create cleaned_data folder if it does not exist
-os.makedirs(CLEANED_DATA_DIR, exist_ok=True)
+# ============================================================
+# LEGAL DATA SOURCES
+# ============================================================
+
+SOURCE_FOLDERS = [
+    "india_code",
+    "supreme_court",
+    "gazette",
+    "law_commission",
+    "high_court",
+]
 
 
-# ==========================================
-# CLEAN TEXT FUNCTION
-# ==========================================
+# ============================================================
+# COMMON WEBSITE TEXT TO REMOVE
+# ============================================================
+
+UNWANTED_LINES = {
+    "Screen Reader Access",
+    "A-",
+    "A",
+    "A+",
+    "T",
+    "Language",
+    "हिंदी",
+    "English",
+    "Skip navigation",
+    "Show Related Subordinates",
+    "Show all section",
+    "Rules",
+    "Regulations",
+    "Notifications",
+    "Orders",
+    "Circulars",
+    "Ordinance",
+    "Statutes",
+    "Sections",
+    "Schedule",
+    "Annexure",
+    "Appendix",
+    "Forms",
+    "Actdetails",
+    "Close",
+    "×",
+}
+
+
+# ============================================================
+# CLEAN TEXT
+# ============================================================
 
 def clean_text(text):
     """
-    Cleans scraped legal text while preserving
-    important legal information and section structure.
+    Clean scraped legal text while preserving important
+    legal content, metadata, headings and section text.
     """
 
     # Normalize line endings
     text = text.replace("\r\n", "\n")
     text = text.replace("\r", "\n")
 
-    # Remove excessive spaces
-    text = re.sub(r"[ \t]+", " ", text)
-
-    # Remove excessive blank lines
-    text = re.sub(r"\n\s*\n+", "\n\n", text)
-
-    # Remove common website navigation text
-    unwanted_lines = {
-        "Screen Reader Access",
-        "A-",
-        "A",
-        "A+",
-        "T",
-        "Language",
-        "हिंदी",
-        "English",
-        "Skip navigation",
-        "Show Related Subordinates",
-    }
-
-    lines = text.split("\n")
+    # Remove tabs and excessive spaces
+    text = re.sub(
+        r"[ \t]+",
+        " ",
+        text
+    )
 
     cleaned_lines = []
 
-    for line in lines:
+    previous_line = None
+
+    for line in text.splitlines():
+
         line = line.strip()
 
+        # Skip empty lines for now
         if not line:
-            cleaned_lines.append("")
             continue
 
-        if line in unwanted_lines:
+        # Remove known website navigation text
+        if line in UNWANTED_LINES:
+            continue
+
+        # Remove consecutive duplicates
+        if line == previous_line:
             continue
 
         cleaned_lines.append(line)
 
-    text = "\n".join(cleaned_lines)
+        previous_line = line
 
-    # Remove excessive blank lines again
-    text = re.sub(r"\n\s*\n+", "\n\n", text)
+    cleaned_text = "\n".join(
+        cleaned_lines
+    )
 
-    return text.strip()
+    return cleaned_text.strip()
 
 
-# ==========================================
+# ============================================================
 # PROCESS ONE FILE
-# ==========================================
+# ============================================================
 
-def process_file(filename):
-    raw_path = os.path.join(RAW_DATA_DIR, filename)
+def process_file(
+    source_name,
+    filename
+):
+    """
+    Clean one raw legal document and store it inside
+    the corresponding cleaned_data source folder.
+    """
 
-    cleaned_path = os.path.join(
-        CLEANED_DATA_DIR,
+    raw_file = os.path.join(
+        RAW_DATA_DIR,
+        source_name,
         filename
     )
 
-    print(f"Processing: {filename}")
+    cleaned_source_dir = os.path.join(
+        CLEANED_DATA_DIR,
+        source_name
+    )
+
+    os.makedirs(
+        cleaned_source_dir,
+        exist_ok=True
+    )
+
+    cleaned_file = os.path.join(
+        cleaned_source_dir,
+        filename
+    )
+
+    print(
+        f"Processing: {source_name}/{filename}"
+    )
 
     try:
-        with open(raw_path, "r", encoding="utf-8") as file:
-            text = file.read()
-
-        cleaned_text = clean_text(text)
 
         with open(
-            cleaned_path,
+            raw_file,
+            "r",
+            encoding="utf-8"
+        ) as file:
+
+            raw_text = file.read()
+
+        cleaned_text = clean_text(
+            raw_text
+        )
+
+        with open(
+            cleaned_file,
             "w",
             encoding="utf-8"
         ) as file:
-            file.write(cleaned_text)
+
+            file.write(
+                cleaned_text
+            )
 
         print(
-            f"Saved cleaned file: {cleaned_path}"
+            f"Characters: "
+            f"{len(raw_text)} -> "
+            f"{len(cleaned_text)}"
         )
 
         print(
-            f"Characters: {len(text)} → {len(cleaned_text)}"
+            f"Saved: {cleaned_file}"
         )
 
-    except Exception as e:
-        print(f"Error processing {filename}: {e}")
+        return True
+
+    except Exception as error:
+
+        print(
+            f"Error processing {filename}: "
+            f"{error}"
+        )
+
+        return False
 
 
-# ==========================================
-# PROCESS ALL RAW FILES
-# ==========================================
+# ============================================================
+# PROCESS SOURCE
+# ============================================================
 
-def main():
+def process_source(source_name):
+    """
+    Process all .txt files belonging to one legal source.
+    """
 
-    print("Starting legal data cleaning...")
-    print()
+    source_dir = os.path.join(
+        RAW_DATA_DIR,
+        source_name
+    )
+
+    if not os.path.exists(source_dir):
+
+        print(
+            f"Source folder not found: "
+            f"{source_name}"
+        )
+
+        return 0, 0
 
     files = [
-        file
-        for file in os.listdir(RAW_DATA_DIR)
-        if file.endswith(".txt")
+        filename
+        for filename in os.listdir(
+            source_dir
+        )
+        if filename.lower().endswith(
+            ".txt"
+        )
     ]
 
     if not files:
-        print("No .txt files found in raw_data.")
-        return
 
-    print(f"Found {len(files)} raw files.")
+        print(
+            f"No documents found for: "
+            f"{source_name}"
+        )
+
+        return 0, 0
+
     print()
+    print("=" * 70)
 
-    for filename in files:
-        process_file(filename)
+    print(
+        f"SOURCE: {source_name.upper()}"
+    )
+
+    print("=" * 70)
+
+    print(
+        f"Documents found: {len(files)}"
+    )
+
+    successful = 0
+
+    failed = 0
+
+    for filename in sorted(files):
+
+        result = process_file(
+            source_name,
+            filename
+        )
+
+        if result:
+            successful += 1
+
+        else:
+            failed += 1
+
+        print()
+
+    return successful, failed
+
+
+# ============================================================
+# MAIN
+# ============================================================
+
+def main():
+
+    print("=" * 70)
+    print("LAWMATE AI - LEGAL DATA CLEANING")
+    print("=" * 70)
+
+    total_successful = 0
+
+    total_failed = 0
+
+    for source_name in SOURCE_FOLDERS:
+
+        successful, failed = process_source(
+            source_name
+        )
+
+        total_successful += successful
+        total_failed += failed
 
     print()
-    print("==========================================")
-    print("Data cleaning completed successfully.")
-    print("==========================================")
+    print("=" * 70)
+    print("LEGAL DATA CLEANING COMPLETE")
+    print("=" * 70)
+
+    print(
+        f"Successfully cleaned: "
+        f"{total_successful}"
+    )
+
+    print(
+        f"Failed: {total_failed}"
+    )
 
 
-# ==========================================
+# ============================================================
 # RUN
-# ==========================================
+# ============================================================
 
 if __name__ == "__main__":
     main()

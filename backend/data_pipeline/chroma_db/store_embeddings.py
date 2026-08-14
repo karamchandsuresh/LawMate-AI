@@ -1,12 +1,15 @@
 import os
+import re
 import chromadb
 
 
-# --------------------------------------------------
-# Paths
-# --------------------------------------------------
+# ============================================================
+# PATH CONFIGURATION
+# ============================================================
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))
+)
 
 CHUNKS_FILE = os.path.join(
     BASE_DIR,
@@ -25,91 +28,97 @@ CHROMA_DIR = os.path.join(
     "chroma_db"
 )
 
+COLLECTION_NAME = "legal_documents"
 
-# --------------------------------------------------
-# Start ChromaDB
-# --------------------------------------------------
 
-print("Starting ChromaDB storage...")
+# ============================================================
+# START
+# ============================================================
 
-client = chromadb.PersistentClient(
-    path=CHROMA_DIR
+print("=" * 70)
+print("LAWMATE AI - CHROMADB STORAGE")
+print("=" * 70)
+
+
+# ============================================================
+# READ AND PARSE LEGAL CHUNKS
+# ============================================================
+
+print("\nReading legal chunks...")
+
+with open(
+    CHUNKS_FILE,
+    "r",
+    encoding="utf-8"
+) as file:
+
+    chunks_content = file.read()
+
+
+chunk_pattern = (
+    r"(?ms)"
+    r"^SOURCE_TYPE:\s*(.*?)\n"
+    r"SOURCE_FILE:\s*(.*?)\n"
+    r"CHUNK:\s*(\d+)\n"
+    r"={3,}\n"
+    r"(.*?)"
+    r"(?=^={3,}\nSOURCE_TYPE:|\Z)"
 )
 
-collection = client.get_or_create_collection(
-    name="legal_documents"
+chunk_matches = re.findall(
+    chunk_pattern,
+    chunks_content
 )
 
-print("ChromaDB collection ready.")
+
+documents = []
+chunk_metadata = []
 
 
-# --------------------------------------------------
-# Read legal chunks
-# --------------------------------------------------
+for (
+    source_type,
+    source_file,
+    chunk_number,
+    chunk_text
+) in chunk_matches:
 
-print("Reading legal chunks...")
+    chunk_text = chunk_text.strip()
 
-with open(CHUNKS_FILE, "r", encoding="utf-8") as file:
-    content = file.read()
-
-
-# --------------------------------------------------
-# Parse chunks
-# --------------------------------------------------
-
-chunks = []
-
-# Every chunk begins with:
-#
-# SOURCE: filename
-# CHUNK: number
-# ========
-#
-# Therefore split using CHUNK:
-
-parts = content.split("CHUNK:")
-
-for part in parts[1:]:
-
-    lines = part.splitlines()
-
-    # First line is chunk number
-    chunk_number = lines[0].strip()
-
-    # Find separator after CHUNK number
-    separator_index = None
-
-    for i, line in enumerate(lines):
-
-        if line.strip().startswith("="):
-
-            separator_index = i
-            break
-
-    if separator_index is None:
+    if not chunk_text:
         continue
 
-    # Everything after separator is legal text
-    legal_text = "\n".join(
-        lines[separator_index + 1:]
-    ).strip()
+    documents.append(
+        chunk_text
+    )
 
-    if legal_text:
+    chunk_metadata.append(
+        {
+            "source_type": source_type.strip(),
+            "source_file": source_file.strip(),
+            "source_chunk": int(chunk_number)
+        }
+    )
 
-        chunks.append(legal_text)
+
+print(
+    f"Legal chunks found: "
+    f"{len(documents)}"
+)
 
 
-print(f"Chunks found: {len(chunks)}")
+if not documents:
+
+    raise ValueError(
+        "No legal chunks were found. "
+        "Check legal_chunks.txt."
+    )
 
 
-# --------------------------------------------------
-# Read embeddings
-# --------------------------------------------------
+# ============================================================
+# READ AND PARSE EMBEDDINGS
+# ============================================================
 
-print("Reading embeddings...")
-
-embeddings = []
-embedding_ids = []
+print("\nReading embeddings...")
 
 with open(
     EMBEDDINGS_FILE,
@@ -117,93 +126,286 @@ with open(
     encoding="utf-8"
 ) as file:
 
-    lines = file.readlines()
+    embeddings_content = file.read()
 
 
-current_id = None
-current_embedding = []
+embedding_pattern = (
+    r"(?ms)"
+    r"CHUNK_ID:\s*(\d+)\n"
+    r"SOURCE_TYPE:\s*(.*?)\n"
+    r"SOURCE_FILE:\s*(.*?)\n"
+    r"SOURCE_CHUNK:\s*(\d+)\n"
+    r"EMBEDDING:\n"
+    r"(.*?)(?=\n\nCHUNK_ID:|\Z)"
+)
 
-
-for line in lines:
-
-    line = line.strip()
-
-    if not line:
-        continue
-
-    # Example:
-    # CHUNK_1
-    if line.startswith("CHUNK_"):
-
-        # Save previous embedding
-        if current_id is not None:
-
-            embeddings.append(current_embedding)
-            embedding_ids.append(current_id)
-
-        current_id = line
-        current_embedding = []
-
-    else:
-
-        values = line.split(",")
-
-        current_embedding.extend(
-            float(value)
-            for value in values
-        )
-
-
-# Save final embedding
-if current_id is not None:
-
-    embeddings.append(current_embedding)
-    embedding_ids.append(current_id)
-
-
-print(f"Embeddings found: {len(embeddings)}")
-
-
-# --------------------------------------------------
-# Validate
-# --------------------------------------------------
-
-if len(chunks) != len(embeddings):
-
-    raise ValueError(
-        f"Mismatch between chunks and embeddings: "
-        f"{len(chunks)} chunks vs "
-        f"{len(embeddings)} embeddings"
-    )
-
-
-# --------------------------------------------------
-# Store in ChromaDB
-# --------------------------------------------------
-
-print("Storing embeddings in ChromaDB...")
-
-collection.upsert(
-    ids=embedding_ids,
-    embeddings=embeddings,
-    documents=chunks,
-    metadatas=[
-        {
-            "chunk_id": embedding_ids[i]
-        }
-        for i in range(len(chunks))
-    ]
+embedding_matches = re.findall(
+    embedding_pattern,
+    embeddings_content
 )
 
 
-# --------------------------------------------------
-# Verify
-# --------------------------------------------------
+embeddings = []
+embedding_metadata = []
+ids = []
 
-count = collection.count()
+
+for (
+    chunk_id,
+    source_type,
+    source_file,
+    source_chunk,
+    embedding_text
+) in embedding_matches:
+
+    values = [
+        float(value)
+        for value in embedding_text.strip().split(",")
+        if value.strip()
+    ]
+
+    if not values:
+        continue
+
+    embeddings.append(
+        values
+    )
+
+    embedding_metadata.append(
+        {
+            "source_type": source_type.strip(),
+            "source_file": source_file.strip(),
+            "source_chunk": int(source_chunk)
+        }
+    )
+
+    ids.append(
+        f"legal_chunk_{int(chunk_id):05d}"
+    )
+
+
+print(
+    f"Embeddings found: "
+    f"{len(embeddings)}"
+)
+
+
+# ============================================================
+# VALIDATE COUNTS
+# ============================================================
+
+if len(documents) != len(embeddings):
+
+    raise ValueError(
+        "Chunk/embedding mismatch: "
+        f"{len(documents)} chunks vs "
+        f"{len(embeddings)} embeddings."
+    )
+
+
+if len(documents) != len(chunk_metadata):
+
+    raise ValueError(
+        "Chunk metadata count does not match "
+        "document count."
+    )
+
+
+if len(embeddings) != len(
+    embedding_metadata
+):
+
+    raise ValueError(
+        "Embedding metadata count does not match "
+        "embedding count."
+    )
+
+
+# ============================================================
+# VALIDATE METADATA ALIGNMENT
+# ============================================================
+
+print(
+    "\nValidating chunk metadata..."
+)
+
+
+for index in range(
+    len(documents)
+):
+
+    chunk_meta = chunk_metadata[index]
+
+    embedding_meta = embedding_metadata[index]
+
+    if (
+        chunk_meta["source_type"]
+        != embedding_meta["source_type"]
+    ):
+
+        raise ValueError(
+            f"Source type mismatch at "
+            f"chunk {index + 1}"
+        )
+
+    if (
+        chunk_meta["source_file"]
+        != embedding_meta["source_file"]
+    ):
+
+        raise ValueError(
+            f"Source file mismatch at "
+            f"chunk {index + 1}"
+        )
+
+    if (
+        chunk_meta["source_chunk"]
+        != embedding_meta["source_chunk"]
+    ):
+
+        raise ValueError(
+            f"Source chunk mismatch at "
+            f"chunk {index + 1}"
+        )
+
+
+print(
+    "Chunk metadata validation successful."
+)
+
+
+# ============================================================
+# CONNECT TO CHROMADB
+# ============================================================
+
+print("\nConnecting to ChromaDB...")
+
+client = chromadb.PersistentClient(
+    path=CHROMA_DIR
+)
+
+print(
+    f"Database location: "
+    f"{CHROMA_DIR}"
+)
+
+
+# ============================================================
+# REBUILD COLLECTION
+# ============================================================
+
+existing_collections = [
+    collection.name
+    for collection
+    in client.list_collections()
+]
+
+
+if COLLECTION_NAME in existing_collections:
+
+    print(
+        "Removing old legal_documents "
+        "collection..."
+    )
+
+    client.delete_collection(
+        name=COLLECTION_NAME
+    )
+
+
+collection = client.create_collection(
+    name=COLLECTION_NAME
+)
+
+print(
+    "Fresh ChromaDB collection created."
+)
+
+
+# ============================================================
+# PREPARE FINAL METADATA
+# ============================================================
+
+metadatas = []
+
+
+for index, meta in enumerate(
+    chunk_metadata
+):
+
+    metadatas.append(
+        {
+            "chunk_id": ids[index],
+            "source_type": meta[
+                "source_type"
+            ],
+            "source_file": meta[
+                "source_file"
+            ],
+            "source_chunk": meta[
+                "source_chunk"
+            ]
+        }
+    )
+
+
+# ============================================================
+# STORE DATA
+# ============================================================
+
+print(
+    "\nStoring legal documents and "
+    "embeddings in ChromaDB..."
+)
+
+collection.add(
+    ids=ids,
+    documents=documents,
+    embeddings=embeddings,
+    metadatas=metadatas
+)
+
+
+# ============================================================
+# VERIFY STORAGE
+# ============================================================
+
+stored_count = collection.count()
+
 
 print()
-print("ChromaDB storage completed successfully.")
-print(f"Documents stored: {count}")
-print(f"Collection name: {collection.name}")
-print(f"Database location: {CHROMA_DIR}")
+print("=" * 70)
+print("CHROMADB STORAGE COMPLETE")
+print("=" * 70)
+
+print(
+    f"Documents stored: "
+    f"{stored_count}"
+)
+
+print(
+    f"Collection name: "
+    f"{COLLECTION_NAME}"
+)
+
+print(
+    f"Database location: "
+    f"{CHROMA_DIR}"
+)
+
+
+# ============================================================
+# FINAL SAFETY CHECK
+# ============================================================
+
+if stored_count != len(documents):
+
+    raise ValueError(
+        "ChromaDB document count does not "
+        "match the expected number."
+    )
+
+
+print(
+    "\nChromaDB verification successful."
+)

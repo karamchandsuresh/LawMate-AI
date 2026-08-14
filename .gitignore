@@ -1,60 +1,74 @@
 # ==========================
 # Python
 # ==========================
+
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+.pytest_cache/
 
 # ==========================
 # Virtual Environment
 # ==========================
+
 backend/venv/
 
 # ==========================
 # Environment Variables
 # ==========================
+
 backend/.env
+.env
 
 # ==========================
 # Node
 # ==========================
+
 frontend/node_modules/
 frontend/dist/
 
 # ==========================
-# VS Code
+# LawMate Generated Data
 # ==========================
-.vscode/
 
-# ==========================
-# macOS
-# ==========================
-.DS_Store
+backend/data_pipeline/raw_data/
+backend/data_pipeline/cleaned_data/
+backend/data_pipeline/source_pdfs/
 
-# ==========================
-# Logs
-# ==========================
-*.log
-
-# ==========================
-# Python Cache
-# ==========================
-.pytest_cache/
-
-# ==========================
-# Jupyter
-# ==========================
-.ipynb_checkpoints/
+backend/data_pipeline/chunking/legal_chunks.txt
+backend/data_pipeline/embeddings/legal_embeddings.txt
 
 # ==========================
 # ChromaDB Generated Database
 # ==========================
-# Generated ChromaDB database/index files are kept locally.
-# Python scripts such as store_embeddings.py remain tracked.
 
 backend/data_pipeline/chroma_db/*.sqlite3
+backend/data_pipeline/chroma_db/database/
 backend/data_pipeline/chroma_db/*/
 
-# Ignore accidental/generated ChromaDB database under services
-backend/services/data_pipeline/chroma_db/
+# ==========================
+# VS Code / IDE
+# ==========================
+
+.vscode/
+.idea/
+
+# ==========================
+# OS
+# ==========================
+
+.DS_Store
+Thumbs.db
+
+# ==========================
+# Logs
+# ==========================
+
+*.log
+
+# ==========================
+# Jupyter
+# ==========================
+
+.ipynb_checkpoints/
