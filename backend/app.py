@@ -1,12 +1,18 @@
 import os
 
-from fastapi import FastAPI
+from fastapi import (
+    FastAPI,
+    File,
+    HTTPException,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 from google import genai
 
 from services.rag_service import rag_query
+from services.document_analyzer import process_document
 
 
 # ============================================================
@@ -43,6 +49,11 @@ gemini_client = genai.Client(
 
 app = FastAPI(
     title="LawMate AI API",
+    description=(
+        "Backend API for LawMate AI — "
+        "Indian legal intelligence, RAG chat, "
+        "and legal document analysis."
+    ),
     version="1.0"
 )
 
@@ -69,6 +80,25 @@ app.add_middleware(
 
 class ChatRequest(BaseModel):
     message: str
+
+
+# ============================================================
+# DOCUMENT ANALYZER CONFIGURATION
+# ============================================================
+
+SUPPORTED_DOCUMENT_TYPES = {
+    ".pdf",
+    ".docx",
+    ".jpg",
+    ".jpeg",
+    ".png",
+}
+
+MAX_DOCUMENT_SIZE = (
+    10 * 1024 * 1024
+)
+
+# 10 MB maximum upload size for Version 1.
 
 
 # ============================================================
@@ -450,6 +480,14 @@ def home():
         "status": "running",
         "rag": "enabled",
         "router": "enabled",
+        "document_analyzer": "enabled",
+        "supported_documents": [
+            "PDF",
+            "DOCX",
+            "JPG",
+            "JPEG",
+            "PNG",
+        ],
     }
 
 
@@ -692,4 +730,220 @@ def chat(
         "mode": "rag",
         "grounded": True,
         "sources": sources,
+    }
+
+
+# ============================================================
+# DOCUMENT ANALYZER ROUTE
+# ============================================================
+
+@app.post("/analyze-document")
+async def analyze_document(
+    file: UploadFile = File(...)
+):
+    """
+    Analyze an uploaded legal document.
+
+    Supported:
+    PDF
+    DOCX
+    JPG
+    JPEG
+    PNG
+    """
+
+    print()
+    print("=" * 70)
+    print("LAWMATE AI DOCUMENT ANALYZER")
+    print("=" * 70)
+
+
+    # ========================================================
+    # VALIDATE FILE NAME
+    # ========================================================
+
+    if not file.filename:
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Uploaded file does not "
+                "have a valid filename."
+            ),
+        )
+
+
+    filename = file.filename.strip()
+
+    print(
+        "Uploaded file:",
+        filename
+    )
+
+
+    # ========================================================
+    # VALIDATE FILE EXTENSION
+    # ========================================================
+
+    extension = os.path.splitext(
+        filename.lower()
+    )[1]
+
+    if extension not in SUPPORTED_DOCUMENT_TYPES:
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unsupported file type. "
+                "Please upload PDF, DOCX, "
+                "JPG, JPEG, or PNG."
+            ),
+        )
+
+
+    # ========================================================
+    # READ UPLOADED FILE
+    # ========================================================
+
+    try:
+
+        file_bytes = await file.read()
+
+    except Exception as error:
+
+        print(
+            "File read error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "Unable to read the uploaded file."
+            ),
+        )
+
+
+    # ========================================================
+    # EMPTY FILE CHECK
+    # ========================================================
+
+    if not file_bytes:
+
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                "The uploaded file is empty."
+            ),
+        )
+
+
+    # ========================================================
+    # FILE SIZE CHECK
+    # ========================================================
+
+    if len(file_bytes) > MAX_DOCUMENT_SIZE:
+
+        raise HTTPException(
+            status_code=413,
+            detail=(
+                "The uploaded file is too large. "
+                "Maximum supported size is 10 MB."
+            ),
+        )
+
+
+    print(
+        f"File size: "
+        f"{len(file_bytes):,} bytes"
+    )
+
+
+    # ========================================================
+    # PROCESS DOCUMENT
+    # ========================================================
+
+    try:
+
+        result = process_document(
+            filename,
+            file_bytes
+        )
+
+    except ValueError as error:
+
+        print(
+            "Document validation error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
+    except RuntimeError as error:
+
+        print(
+            "Document processing error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=str(error),
+        )
+
+    except Exception as error:
+
+        print(
+            "Unexpected document analyzer error:",
+            error
+        )
+
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "LawMate encountered an error "
+                "while analyzing this document."
+            ),
+        )
+
+
+    # ========================================================
+    # SUCCESS
+    # ========================================================
+
+    print(
+        "Document analysis completed successfully."
+    )
+
+    print(
+        "Characters extracted:",
+        result.get(
+            "characters_extracted",
+            0
+        )
+    )
+
+
+    return {
+        "status": "success",
+        "mode": "document_analysis",
+        "filename": result[
+            "filename"
+        ],
+        "characters_extracted": result[
+            "characters_extracted"
+        ],
+        "analysis": result[
+            "analysis"
+        ],
+        "supported_formats": [
+            "PDF",
+            "DOCX",
+            "JPG",
+            "JPEG",
+            "PNG",
+        ],
     }

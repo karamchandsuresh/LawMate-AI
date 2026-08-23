@@ -10,11 +10,11 @@
 .upload-page {
   width: 100%;
 
-  max-width: 1000px;
+  max-width: 1200px;
 
   margin: 0 auto;
 
-  padding: 20px 20px 40px;
+  padding: 30px 24px 50px;
 
   box-sizing: border-box;
 
@@ -40,11 +40,13 @@
 ========================================== */
 
 .upload-page > p {
-  max-width: 700px;
+  max-width: 760px;
 
   margin: 0 auto 25px;
 
-  line-height: 1.6;
+  line-height: 1.7;
+
+  font-size: 16px;
 
   color: #4b5563;
 }
@@ -55,17 +57,17 @@
 ========================================== */
 
 .upload-box {
-  width: 70%;
+  width: 75%;
 
-  max-width: 700px;
+  max-width: 720px;
 
-  margin: 25px auto;
+  margin: 28px auto;
 
-  padding: 40px 30px;
+  padding: 38px 32px;
 
   border: 2px dashed #2563eb;
 
-  border-radius: 15px;
+  border-radius: 16px;
 
   background: #f8fafc;
 
@@ -77,6 +79,8 @@
 
 .upload-box:hover {
   background: #eff6ff;
+
+  border-color: #1d4ed8;
 }
 
 
@@ -101,11 +105,13 @@
   margin: 12px 0;
 
   color: #4b5563;
+
+  line-height: 1.5;
 }
 
 
 /* ==========================================
-            BROWSE BUTTON
+            BUTTONS
 ========================================== */
 
 .upload-box button {
@@ -127,12 +133,35 @@
 
   cursor: pointer;
 
-  transition: 0.3s;
+  transition:
+    background 0.3s,
+    transform 0.2s,
+    box-shadow 0.2s;
 }
 
 
-.upload-box button:hover {
+.upload-box button:hover:not(:disabled) {
   background: #1d4ed8;
+
+  transform: translateY(-1px);
+
+  box-shadow: 0 6px 15px rgba(37, 99, 235, 0.18);
+}
+
+
+.upload-box button:disabled {
+  opacity: 0.65;
+
+  cursor: not-allowed;
+}
+
+
+/* ==========================================
+            ANALYZE BUTTON
+========================================== */
+
+.analyze-button {
+  margin-top: 10px;
 }
 
 
@@ -150,13 +179,322 @@
 
 
 /* ==========================================
+            SELECTED FILE
+========================================== */
+
+.selected-file {
+  margin: 20px auto 8px;
+
+  padding: 14px 18px;
+
+  max-width: 520px;
+
+  background: #ffffff;
+
+  border: 1px solid #dbeafe;
+
+  border-radius: 10px;
+
+  box-sizing: border-box;
+}
+
+
+.selected-file p {
+  margin: 5px 0;
+
+  color: #334155;
+
+  font-size: 15px;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ==========================================
+              ERROR MESSAGE
+========================================== */
+
+.upload-error {
+  max-width: 720px;
+
+  margin: 20px auto;
+
+  padding: 14px 18px;
+
+  background: #fef2f2;
+
+  border: 1px solid #fecaca;
+
+  border-left: 5px solid #dc2626;
+
+  border-radius: 8px;
+
+  color: #991b1b;
+
+  text-align: left;
+
+  line-height: 1.5;
+
+  box-sizing: border-box;
+}
+
+
+/* ==========================================
+            ANALYSIS LOADING
+========================================== */
+
+.analysis-loading {
+  max-width: 720px;
+
+  margin: 30px auto;
+
+  padding: 24px;
+
+  background: #eff6ff;
+
+  border: 1px solid #bfdbfe;
+
+  border-radius: 12px;
+
+  box-sizing: border-box;
+}
+
+
+.analysis-loading h3 {
+  margin: 0 0 10px;
+
+  color: #1e40af;
+}
+
+
+.analysis-loading p {
+  margin: 0;
+
+  color: #475569;
+
+  line-height: 1.6;
+}
+
+
+/* ==========================================
+            ANALYSIS RESULT
+========================================== */
+
+.analysis-result {
+  width: 100%;
+
+  max-width: 950px;
+
+  margin: 40px auto 30px;
+
+  padding: 32px 38px;
+
+  background: #ffffff;
+
+  border: 1px solid #e2e8f0;
+
+  border-radius: 16px;
+
+  box-shadow:
+    0 8px 30px rgba(15, 23, 42, 0.08);
+
+  box-sizing: border-box;
+
+  text-align: left;
+}
+
+
+/* ==========================================
+        ANALYSIS RESULT MAIN TITLE
+========================================== */
+
+.analysis-result > h2 {
+  margin: 0 0 25px;
+
+  padding-bottom: 16px;
+
+  border-bottom: 1px solid #e2e8f0;
+
+  color: #0f172a;
+
+  font-size: 1.7rem;
+
+  text-align: center;
+}
+
+
+/* ==========================================
+          MARKDOWN CONTENT
+========================================== */
+
+.analysis-content {
+  color: #334155;
+
+  font-size: 16px;
+
+  line-height: 1.75;
+
+  text-align: left;
+
+  overflow-wrap: anywhere;
+}
+
+
+/* ==========================================
+          MARKDOWN HEADINGS
+========================================== */
+
+.analysis-content h1,
+.analysis-content h2,
+.analysis-content h3,
+.analysis-content h4 {
+  color: #0f172a;
+
+  text-align: left;
+}
+
+
+.analysis-content h1 {
+  margin: 30px 0 16px;
+
+  font-size: 1.8rem;
+}
+
+
+.analysis-content h2 {
+  margin: 28px 0 14px;
+
+  font-size: 1.5rem;
+}
+
+
+.analysis-content h3 {
+  margin: 26px 0 12px;
+
+  padding-bottom: 8px;
+
+  font-size: 1.25rem;
+
+  border-bottom: 1px solid #e5e7eb;
+}
+
+
+.analysis-content h4 {
+  margin: 22px 0 10px;
+
+  font-size: 1.1rem;
+}
+
+
+/* ==========================================
+          MARKDOWN PARAGRAPHS
+========================================== */
+
+.analysis-content p {
+  margin: 10px 0 16px;
+
+  color: #334155;
+
+  line-height: 1.75;
+
+  text-align: left;
+}
+
+
+/* ==========================================
+            MARKDOWN LISTS
+========================================== */
+
+.analysis-content ul,
+.analysis-content ol {
+  margin: 10px 0 20px;
+
+  padding-left: 28px;
+
+  text-align: left;
+}
+
+
+.analysis-content li {
+  margin-bottom: 9px;
+
+  line-height: 1.7;
+
+  color: #334155;
+}
+
+
+/* ==========================================
+          MARKDOWN STRONG TEXT
+========================================== */
+
+.analysis-content strong {
+  color: #0f172a;
+
+  font-weight: 700;
+}
+
+
+/* ==========================================
+          MARKDOWN HORIZONTAL LINE
+========================================== */
+
+.analysis-content hr {
+  margin: 28px 0;
+
+  border: none;
+
+  border-top: 1px solid #e2e8f0;
+}
+
+
+/* ==========================================
+          MARKDOWN BLOCKQUOTES
+========================================== */
+
+.analysis-content blockquote {
+  margin: 20px 0;
+
+  padding: 14px 18px;
+
+  background: #f8fafc;
+
+  border-left: 4px solid #2563eb;
+
+  color: #475569;
+
+  border-radius: 6px;
+}
+
+
+/* ==========================================
+          MARKDOWN CODE
+========================================== */
+
+.analysis-content code {
+  padding: 2px 6px;
+
+  background: #f1f5f9;
+
+  border-radius: 5px;
+
+  font-family:
+    Consolas,
+    "Courier New",
+    monospace;
+
+  font-size: 0.92em;
+}
+
+
+/* ==========================================
           SUPPORTED FILES
 ========================================== */
 
 .supported-files {
   width: 100%;
 
-  margin-top: 25px;
+  margin-top: 32px;
 
   text-align: center;
 
@@ -180,7 +518,7 @@
 .supported-files p {
   margin: 0;
 
-  font-size: 17px;
+  font-size: 16px;
 
   color: #4b5563;
 
@@ -193,13 +531,15 @@
 ========================================== */
 
 .security-note {
-  max-width: 700px;
+  max-width: 760px;
 
   margin: 25px auto 0;
 
-  padding: 14px 18px;
+  padding: 15px 20px;
 
   background: #ecfdf5;
+
+  border: 1px solid #bbf7d0;
 
   border-left: 5px solid #16a34a;
 
@@ -207,20 +547,45 @@
 
   color: #166534;
 
-  line-height: 1.5;
+  line-height: 1.6;
 
   box-sizing: border-box;
+
+  text-align: left;
 }
 
 
 /* ==========================================
-            RESPONSIVE DESIGN
+            TABLET DESIGN
+========================================== */
+
+@media (max-width: 900px) {
+
+  .upload-page {
+    padding: 24px 18px 40px;
+  }
+
+
+  .upload-box {
+    width: 90%;
+  }
+
+
+  .analysis-result {
+    padding: 28px 26px;
+  }
+
+}
+
+
+/* ==========================================
+            MOBILE DESIGN
 ========================================== */
 
 @media (max-width: 768px) {
 
   .upload-page {
-    padding: 15px 15px 30px;
+    padding: 18px 14px 30px;
   }
 
 
@@ -229,10 +594,17 @@
   }
 
 
+  .upload-page > p {
+    font-size: 15px;
+  }
+
+
   .upload-box {
     width: 100%;
 
-    padding: 35px 20px;
+    padding: 30px 18px;
+
+    margin: 22px auto;
   }
 
 
@@ -243,11 +615,88 @@
 
   .upload-box button {
     width: 180px;
+
+    font-size: 15px;
+  }
+
+
+  .selected-file {
+    padding: 12px 14px;
+  }
+
+
+  .analysis-result {
+    margin-top: 28px;
+
+    padding: 22px 18px;
+
+    border-radius: 12px;
+  }
+
+
+  .analysis-result > h2 {
+    font-size: 1.45rem;
+  }
+
+
+  .analysis-content {
+    font-size: 15px;
+  }
+
+
+  .analysis-content h2 {
+    font-size: 1.35rem;
+  }
+
+
+  .analysis-content h3 {
+    font-size: 1.15rem;
+  }
+
+
+  .analysis-content ul,
+  .analysis-content ol {
+    padding-left: 22px;
   }
 
 
   .security-note {
     font-size: 14px;
+
+    text-align: left;
+  }
+
+}
+
+
+/* ==========================================
+          SMALL MOBILE DESIGN
+========================================== */
+
+@media (max-width: 480px) {
+
+  .upload-page h1 {
+    font-size: 1.55rem;
+  }
+
+
+  .upload-box {
+    padding: 25px 14px;
+  }
+
+
+  .upload-box button {
+    width: 100%;
+  }
+
+
+  .analysis-result {
+    padding: 20px 15px;
+  }
+
+
+  .analysis-content {
+    font-size: 14.5px;
   }
 
 }
