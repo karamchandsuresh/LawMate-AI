@@ -6,6 +6,7 @@ import Footer from "./components/Footer";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import Upload from "./pages/Upload";
+import Complaint from "./pages/Complaint";
 import About from "./pages/About";
 
 import {
@@ -20,12 +21,21 @@ function AppContent() {
 
   const location = useLocation();
 
-  const isChatPage = location.pathname === "/chat";
+  const isChatPage =
+    location.pathname === "/chat";
 
 
   return (
 
-    <div className={`app ${isChatPage ? "chat-app" : ""}`}>
+    <div
+      className={
+        `app ${
+          isChatPage
+            ? "chat-app"
+            : ""
+        }`
+      }
+    >
 
       <Navbar />
 
@@ -56,6 +66,11 @@ function AppContent() {
           />
 
           <Route
+            path="/complaint"
+            element={<Complaint />}
+          />
+
+          <Route
             path="/about"
             element={<About />}
           />
@@ -65,7 +80,10 @@ function AppContent() {
       </main>
 
 
-      {!isChatPage && <Footer />}
+      {
+        !isChatPage &&
+        <Footer />
+      }
 
     </div>
 

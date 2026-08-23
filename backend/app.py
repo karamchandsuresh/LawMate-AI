@@ -3,6 +3,7 @@ import os
 from fastapi import (
     FastAPI,
     File,
+    Form,
     HTTPException,
     UploadFile,
 )
@@ -12,7 +13,11 @@ from dotenv import load_dotenv
 from google import genai
 
 from services.rag_service import rag_query
-from services.document_analyzer import process_document
+from services.document_analyzer import (
+    process_document,
+    extract_text_from_file,
+)
+from services.complaint_generator import generate_complaint
 
 
 # ============================================================
@@ -52,7 +57,7 @@ app = FastAPI(
     description=(
         "Backend API for LawMate AI — "
         "Indian legal intelligence, RAG chat, "
-        "and legal document analysis."
+        "legal document analysis, and complaint drafting."
     ),
     version="1.0"
 )
@@ -80,6 +85,20 @@ app.add_middleware(
 
 class ChatRequest(BaseModel):
     message: str
+
+
+class ComplaintRequest(BaseModel):
+    complaint_type: str
+    problem_description: str
+    complainant_name: str = ""
+    complainant_address: str = ""
+    complainant_contact: str = ""
+    opposite_party: str = ""
+    incident_date: str = ""
+    incident_location: str = ""
+    amount_involved: str = ""
+    evidence: str = ""
+    desired_relief: str = ""
 
 
 # ============================================================
@@ -481,6 +500,7 @@ def home():
         "rag": "enabled",
         "router": "enabled",
         "document_analyzer": "enabled",
+        "complaint_generator": "enabled",
         "supported_documents": [
             "PDF",
             "DOCX",
@@ -946,4 +966,230 @@ async def analyze_document(
             "JPEG",
             "PNG",
         ],
+    }
+
+# ============================================================
+# COMPLAINT GENERATOR ROUTE
+# ============================================================
+# ============================================================
+# COMPLAINT GENERATOR ROUTE
+# ============================================================
+
+MAX_EVIDENCE_FILES = 5
+MAX_EVIDENCE_FILE_SIZE = 10 * 1024 * 1024
+
+
+@app.post("/generate-complaint")
+async def generate_complaint_route(
+    complaint_type: str = Form(...),
+    problem_description: str = Form(...),
+    complainant_name: str = Form(""),
+    complainant_address: str = Form(""),
+    complainant_contact: str = Form(""),
+    opposite_party: str = Form(""),
+    incident_date: str = Form(""),
+    incident_location: str = Form(""),
+    amount_involved: str = Form(""),
+    evidence: str = Form(""),
+    desired_relief: str = Form(""),
+    evidence_files: list[UploadFile] | None = File(None),
+):
+    """
+    Generate a structured legal complaint draft from form fields
+    and optional uploaded supporting evidence.
+    """
+
+    print()
+    print("=" * 70)
+    print("LAWMATE AI COMPLAINT GENERATOR")
+    print("=" * 70)
+
+    complaint_type = complaint_type.strip()
+    problem_description = problem_description.strip()
+    complainant_name = complainant_name.strip()
+    complainant_address = complainant_address.strip()
+    complainant_contact = complainant_contact.strip()
+    opposite_party = opposite_party.strip()
+    incident_date = incident_date.strip()
+    incident_location = incident_location.strip()
+    amount_involved = amount_involved.strip()
+    evidence = evidence.strip()
+    desired_relief = desired_relief.strip()
+
+    print("Complaint type:", complaint_type)
+
+    if not complaint_type:
+        raise HTTPException(
+            status_code=400,
+            detail="Please select a complaint type.",
+        )
+
+    if not problem_description:
+        raise HTTPException(
+            status_code=400,
+            detail="Please provide a problem description.",
+        )
+
+    uploaded_evidence_texts = []
+    uploaded_evidence_names = []
+
+    files = [
+        uploaded_file
+        for uploaded_file in (evidence_files or [])
+        if uploaded_file and uploaded_file.filename
+    ]
+
+    if len(files) > MAX_EVIDENCE_FILES:
+        raise HTTPException(
+            status_code=400,
+            detail=(
+                f"Please upload no more than "
+                f"{MAX_EVIDENCE_FILES} evidence files."
+            ),
+        )
+
+    for uploaded_file in files:
+        filename = uploaded_file.filename.strip()
+
+        extension = os.path.splitext(
+            filename.lower()
+        )[1]
+
+        if extension not in SUPPORTED_DOCUMENT_TYPES:
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Unsupported evidence file: {filename}. "
+                    "Supported formats are PDF, DOCX, "
+                    "JPG, JPEG, and PNG."
+                ),
+            )
+
+        try:
+            file_bytes = await uploaded_file.read()
+        except Exception as error:
+            print("Evidence file read error:", error)
+            raise HTTPException(
+                status_code=400,
+                detail=f"Unable to read evidence file: {filename}.",
+            )
+
+        if not file_bytes:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Evidence file is empty: {filename}.",
+            )
+
+        if len(file_bytes) > MAX_EVIDENCE_FILE_SIZE:
+            raise HTTPException(
+                status_code=413,
+                detail=(
+                    f"Evidence file is too large: {filename}. "
+                    "Maximum size is 10 MB."
+                ),
+            )
+
+        try:
+            extracted_text = extract_text_from_file(
+                filename,
+                file_bytes
+            )
+        except RuntimeError as error:
+            print("Evidence processing error:", error)
+            raise HTTPException(
+                status_code=500,
+                detail=str(error),
+            )
+        except Exception as error:
+            print(
+                f"Evidence extraction warning for {filename}:",
+                error
+            )
+            extracted_text = ""
+
+        uploaded_evidence_names.append(filename)
+
+        if extracted_text.strip():
+            uploaded_evidence_texts.append(
+                f"Uploaded supporting file: {filename}\n"
+                f"{extracted_text[:12000]}"
+            )
+        else:
+            uploaded_evidence_texts.append(
+                f"Uploaded supporting file: {filename}\n"
+                "[No readable text could be extracted from this file. "
+                "Treat it only as user-supplied supporting material.]"
+            )
+
+    evidence_parts = []
+
+    if evidence:
+        evidence_parts.append(
+            "User-provided evidence description:\n"
+            f"{evidence}"
+        )
+
+    if uploaded_evidence_texts:
+        evidence_parts.append(
+            "Text extracted from uploaded supporting evidence:\n\n"
+            + "\n\n".join(uploaded_evidence_texts)
+        )
+
+    combined_evidence = "\n\n".join(
+        evidence_parts
+    ).strip()
+
+    try:
+        result = generate_complaint(
+            complaint_type=complaint_type,
+            problem_description=problem_description,
+            complainant_name=complainant_name,
+            complainant_address=complainant_address,
+            complainant_contact=complainant_contact,
+            opposite_party=opposite_party,
+            incident_date=incident_date,
+            incident_location=incident_location,
+            amount_involved=amount_involved,
+            evidence=combined_evidence,
+            desired_relief=desired_relief,
+        )
+
+    except ValueError as error:
+        print("Complaint validation error:", error)
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
+    except Exception as error:
+        print("Complaint generation error:", error)
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "LawMate encountered an error "
+                "while generating the complaint."
+            ),
+        )
+
+    print("Complaint generated successfully.")
+
+    if uploaded_evidence_names:
+        print(
+            "Evidence files processed:",
+            ", ".join(uploaded_evidence_names)
+        )
+
+    return {
+        "status": "success",
+        "mode": "complaint_generation",
+        "complaint_type": result["complaint_type"],
+        "complaint_label": result["complaint_label"],
+        "draft": result["draft"],
+        "evidence_files_processed": uploaded_evidence_names,
+        "evidence_notice": (
+            "Uploaded evidence is treated as user-supplied "
+            "supporting material. LawMate AI does not verify "
+            "authenticity, originality, editing history, "
+            "completeness, or legal admissibility."
+        ),
     }
