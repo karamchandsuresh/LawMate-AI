@@ -18,6 +18,10 @@ from services.document_analyzer import (
     extract_text_from_file,
 )
 from services.complaint_generator import generate_complaint
+from services.multilingual_service import (
+    prepare_multilingual_query,
+    prepare_multilingual_response,
+)
 
 
 # ============================================================
@@ -501,6 +505,7 @@ def home():
         "router": "enabled",
         "document_analyzer": "enabled",
         "complaint_generator": "enabled",
+        "multilingual_chat": "enabled",
         "supported_documents": [
             "PDF",
             "DOCX",
@@ -516,148 +521,148 @@ def home():
 # ============================================================
 
 @app.post("/chat")
-def chat(
-    request: ChatRequest
-):
+def chat(request: ChatRequest):
 
-    message = request.message.strip()
+    original_message = request.message.strip()
 
     print()
     print("=" * 70)
     print("LAWMATE AI CHAT")
     print("=" * 70)
+    print("User:", original_message)
 
-    print(
-        "User:",
-        message
-    )
-
-
-    # ========================================================
-    # EMPTY MESSAGE
-    # ========================================================
-
-    if not message:
-
+    if not original_message:
         return {
-            "reply": (
-                "Please enter a question."
-            ),
+            "reply": "Please enter a question.",
             "mode": "validation",
             "grounded": False,
             "sources": [],
+            "language": "english",
         }
 
+    # Detect the user's language and translate the query to
+    # English before intent classification and RAG retrieval.
+    try:
+        multilingual_input = prepare_multilingual_query(
+            original_message
+        )
+        user_language = multilingual_input["language"]
+        message = multilingual_input["english_text"]
+    except Exception as error:
+        print("Multilingual input error:", error)
+        user_language = "english"
+        message = original_message
 
-    # ========================================================
-    # GREETING
-    # ========================================================
+    print("Detected language:", user_language)
 
-    if is_greeting(
-        message
-    ):
+    if user_language != "english":
+        print("English query:", message)
+
+    # Greeting detection is performed on the English form so
+    # greetings in supported languages can use the same logic.
+    if is_greeting(message):
+
+        english_reply = (
+            "Hello! 👋 I'm LawMate AI. "
+            "I can help you understand Indian laws, "
+            "legal rights, court decisions, complaints, "
+            "and other legal matters. "
+            "How can I assist you?"
+        )
+
+        try:
+            reply = prepare_multilingual_response(
+                english_reply,
+                user_language
+            )
+        except Exception as error:
+            print("Greeting translation error:", error)
+            reply = english_reply
 
         return {
-            "reply": (
-                "Hello! 👋 I'm LawMate AI. "
-                "I can help you understand Indian laws, "
-                "legal rights, court decisions, complaints, "
-                "and other legal matters. "
-                "How can I assist you?"
-            ),
+            "reply": reply,
             "mode": "greeting",
             "grounded": False,
             "sources": [],
+            "language": user_language,
         }
 
+    print("Classifying user intent...")
 
-    # ========================================================
-    # INTENT CLASSIFICATION
-    # ========================================================
+    intent = classify_intent(message)
 
-    print(
-        "Classifying user intent..."
-    )
-
-    intent = classify_intent(
-        message
-    )
-
-    print(
-        "Intent:",
-        intent
-    )
-
-
-    # ========================================================
-    # NON-LEGAL QUESTION
-    # ========================================================
+    print("Intent:", intent)
 
     if intent == "non_legal":
 
+        english_reply = (
+            "I'm LawMate AI, designed primarily "
+            "for Indian legal assistance. ⚖️\n\n"
+            "I can help with laws, legal rights, "
+            "court decisions, complaints, contracts, "
+            "consumer issues, cyber law, criminal law, "
+            "family law, and related legal matters."
+        )
+
+        try:
+            reply = prepare_multilingual_response(
+                english_reply,
+                user_language
+            )
+        except Exception as error:
+            print(
+                "Non-legal response translation error:",
+                error
+            )
+            reply = english_reply
+
         return {
-            "reply": (
-                "I'm LawMate AI, designed primarily "
-                "for Indian legal assistance. ⚖️\n\n"
-                "I can help with laws, legal rights, "
-                "court decisions, complaints, contracts, "
-                "consumer issues, cyber law, criminal law, "
-                "family law, and related legal matters."
-            ),
+            "reply": reply,
             "mode": "non_legal",
             "grounded": False,
             "sources": [],
+            "language": user_language,
         }
-
-
-    # ========================================================
-    # LEGAL QUESTION → RAG
-    # ========================================================
 
     print(
         "Searching verified LawMate RAG sources..."
     )
 
     try:
-
+        # The existing English legal knowledge base remains
+        # unchanged. RAG receives the English query.
         result = rag_query(
             message,
             top_k=3
         )
-
     except Exception as error:
 
-        print(
-            "RAG error:",
-            error
+        print("RAG error:", error)
+
+        english_reply = (
+            "LawMate encountered a temporary "
+            "problem while processing your legal "
+            "question. Please try again."
         )
 
+        try:
+            reply = prepare_multilingual_response(
+                english_reply,
+                user_language
+            )
+        except Exception:
+            reply = english_reply
+
         return {
-            "reply": (
-                "LawMate encountered a temporary "
-                "problem while processing your legal "
-                "question. Please try again."
-            ),
+            "reply": reply,
             "mode": "error",
             "grounded": False,
             "sources": [],
+            "language": user_language,
         }
 
-
-    answer = result.get(
-        "answer",
-        ""
-    )
-
-    sources = result.get(
-        "sources",
-        []
-    )
-
-
-    # ========================================================
-    # RAG INSUFFICIENT → GEMINI FALLBACK
-    # ========================================================
+    answer = result.get("answer", "")
+    sources = result.get("sources", [])
 
     if rag_is_insufficient(
         answer,
@@ -667,19 +672,16 @@ def chat(
         print(
             "Verified RAG context insufficient."
         )
-
         print(
             "Using Gemini legal fallback..."
         )
 
         try:
-
             fallback_answer = (
                 generate_general_legal_answer(
                     message
                 )
             )
-
         except Exception as error:
 
             print(
@@ -687,20 +689,30 @@ def chat(
                 error
             )
 
+            english_reply = (
+                "The current LawMate legal "
+                "knowledge base does not contain "
+                "enough verified information to "
+                "answer this question reliably."
+            )
+
+            try:
+                reply = prepare_multilingual_response(
+                    english_reply,
+                    user_language
+                )
+            except Exception:
+                reply = english_reply
+
             return {
-                "reply": (
-                    "The current LawMate legal "
-                    "knowledge base does not contain "
-                    "enough verified information to "
-                    "answer this question reliably."
-                ),
+                "reply": reply,
                 "mode": "insufficient",
                 "grounded": False,
                 "sources": [],
+                "language": user_language,
             }
 
-
-        reply = (
+        english_reply = (
             "🟡 Grounding Status: "
             "General AI Information — "
             "Not verified by LawMate RAG sources\n\n"
@@ -711,27 +723,31 @@ def chat(
             f"{fallback_answer}"
         )
 
+        try:
+            reply = prepare_multilingual_response(
+                english_reply,
+                user_language
+            )
+        except Exception as error:
+            print(
+                "Fallback response translation error:",
+                error
+            )
+            reply = english_reply
 
         return {
             "reply": reply,
             "mode": "gemini_fallback",
             "grounded": False,
             "sources": [],
+            "language": user_language,
         }
 
-
-    # ========================================================
-    # VERIFIED RAG ANSWER
-    # ========================================================
-
-    citations = (
-        format_verified_sources(
-            sources
-        )
+    citations = format_verified_sources(
+        sources
     )
 
-
-    reply = (
+    english_reply = (
         "🟢 Grounding Status: "
         "Verified from LawMate RAG sources\n\n"
         f"{answer}\n\n"
@@ -739,17 +755,28 @@ def chat(
         f"{citations}"
     )
 
+    try:
+        reply = prepare_multilingual_response(
+            english_reply,
+            user_language
+        )
+    except Exception as error:
+        print(
+            "RAG response translation error:",
+            error
+        )
+        reply = english_reply
 
     print(
         "Verified RAG answer generated."
     )
-
 
     return {
         "reply": reply,
         "mode": "rag",
         "grounded": True,
         "sources": sources,
+        "language": user_language,
     }
 
 
