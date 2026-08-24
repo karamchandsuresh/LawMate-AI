@@ -279,10 +279,26 @@ it as unverified user-provided information.
 
 ### Uploaded Supporting Files
 
-List uploaded filenames when available. Briefly describe
-relevant extracted content using cautious wording. State
-clearly that LawMate has not verified authenticity,
-originality, or legal admissibility.
+For each uploaded file, use the relevance assessment included
+in the extracted evidence context and show:
+
+- Filename
+- Relevance: Relevant / Possibly Relevant / Irrelevant
+- Short reason
+- Attachment recommendation
+
+If the file is Relevant, recommend attaching it after the
+user reviews it.
+
+If it is Possibly Relevant, recommend reviewing it before
+deciding whether to attach it.
+
+If it is Irrelevant, recommend not attaching it unless the
+user can explain a genuine connection to the complaint.
+
+State clearly that LawMate has not verified authenticity,
+originality, editing history, completeness, or legal
+admissibility.
 
 ## Relief / Action Requested
 

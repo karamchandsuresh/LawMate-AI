@@ -979,6 +979,146 @@ MAX_EVIDENCE_FILES = 5
 MAX_EVIDENCE_FILE_SIZE = 10 * 1024 * 1024
 
 
+def classify_evidence_relevance(
+    complaint_type,
+    problem_description,
+    filename,
+    extracted_text,
+):
+    """
+    Assess apparent relevance only.
+    This does not authenticate evidence.
+    """
+
+    if not extracted_text.strip():
+        return {
+            "filename": filename,
+            "relevance": "possibly relevant",
+            "reason": (
+                "No readable text could be extracted "
+                "from this file."
+            ),
+            "recommendation": (
+                "Review this file manually before "
+                "deciding whether to attach it."
+            ),
+            "status": (
+                "Possibly Relevant — manual review recommended"
+            ),
+        }
+
+    prompt = f"""
+You are LawMate AI.
+
+Assess ONLY whether this USER-SUPPLIED file appears relevant
+ to the complaint below.
+
+This is NOT an authenticity or admissibility check.
+Never claim that the file is genuine, original, unedited,
+verified, legally admissible, or conclusive.
+
+COMPLAINT TYPE:
+{complaint_type}
+
+PROBLEM DESCRIPTION:
+{problem_description}
+
+UPLOADED FILE:
+{filename}
+
+EXTRACTED TEXT:
+{extracted_text[:12000]}
+
+Classify the file as exactly one of:
+relevant
+possibly relevant
+irrelevant
+
+Relevant means the readable contents directly relate to the
+facts, transaction, communication, parties, incident, loss,
+or relief in the complaint.
+
+Possibly relevant means the connection is incomplete,
+unclear, indirect, or there is not enough readable content.
+
+Irrelevant means the readable contents appear unrelated to
+the stated complaint.
+
+If relevant, recommend attaching it after user review.
+If possibly relevant, recommend reviewing it before attachment.
+If irrelevant, recommend not attaching it unless the user can
+explain a real connection.
+
+Return EXACTLY three lines:
+RELEVANCE: relevant OR possibly relevant OR irrelevant
+REASON: one short sentence
+RECOMMENDATION: one short sentence
+"""
+
+    try:
+        response = gemini_client.models.generate_content(
+            model=ROUTER_MODEL,
+            contents=prompt,
+        )
+
+        relevance = "possibly relevant"
+        reason = (
+            "LawMate could not determine relevance "
+            "with high confidence."
+        )
+        recommendation = (
+            "Review this file manually before deciding "
+            "whether to attach it."
+        )
+
+        for line in response.text.splitlines():
+            cleaned = line.strip()
+            lower = cleaned.lower()
+
+            if lower.startswith("relevance:"):
+                value = cleaned.split(":", 1)[1].strip().lower()
+                if value in {
+                    "relevant",
+                    "possibly relevant",
+                    "irrelevant",
+                }:
+                    relevance = value
+
+            elif lower.startswith("reason:"):
+                value = cleaned.split(":", 1)[1].strip()
+                if value:
+                    reason = value
+
+            elif lower.startswith("recommendation:"):
+                value = cleaned.split(":", 1)[1].strip()
+                if value:
+                    recommendation = value
+
+    except Exception as error:
+        print("Evidence relevance analysis error:", error)
+
+        relevance = "possibly relevant"
+        reason = (
+            "Automatic relevance assessment was unavailable."
+        )
+        recommendation = (
+            "Review this file manually before deciding "
+            "whether to attach it."
+        )
+
+    relevance_label = relevance.title()
+
+    return {
+        "filename": filename,
+        "relevance": relevance,
+        "reason": reason,
+        "recommendation": recommendation,
+        "status": (
+            f"{relevance_label} — {recommendation}"
+        ),
+    }
+
+
 @app.post("/generate-complaint")
 async def generate_complaint_route(
     complaint_type: str = Form(...),
@@ -995,8 +1135,8 @@ async def generate_complaint_route(
     evidence_files: list[UploadFile] | None = File(None),
 ):
     """
-    Generate a structured legal complaint draft from form fields
-    and optional uploaded supporting evidence.
+    Generate a complaint from user-provided facts and optional
+    uploaded supporting material.
     """
 
     print()
@@ -1018,28 +1158,13 @@ async def generate_complaint_route(
 
     print("Complaint type:", complaint_type)
 
-    if not complaint_type:
-        raise HTTPException(
-            status_code=400,
-            detail="Please select a complaint type.",
-        )
-
-    if not problem_description:
-        raise HTTPException(
-            status_code=400,
-            detail="Please provide a problem description.",
-        )
-
-    uploaded_evidence_texts = []
-    uploaded_evidence_names = []
-
-    files = [
-        uploaded_file
-        for uploaded_file in (evidence_files or [])
-        if uploaded_file and uploaded_file.filename
+    uploaded_files = [
+        file
+        for file in (evidence_files or [])
+        if file and file.filename
     ]
 
-    if len(files) > MAX_EVIDENCE_FILES:
+    if len(uploaded_files) > MAX_EVIDENCE_FILES:
         raise HTTPException(
             status_code=400,
             detail=(
@@ -1048,20 +1173,21 @@ async def generate_complaint_route(
             ),
         )
 
-    for uploaded_file in files:
-        filename = uploaded_file.filename.strip()
+    evidence_results = []
+    evidence_text_blocks = []
+    evidence_filenames = []
 
-        extension = os.path.splitext(
-            filename.lower()
-        )[1]
+    for uploaded_file in uploaded_files:
+        filename = uploaded_file.filename.strip()
+        extension = os.path.splitext(filename.lower())[1]
 
         if extension not in SUPPORTED_DOCUMENT_TYPES:
             raise HTTPException(
                 status_code=400,
                 detail=(
                     f"Unsupported evidence file: {filename}. "
-                    "Supported formats are PDF, DOCX, "
-                    "JPG, JPEG, and PNG."
+                    "Supported formats are PDF, DOCX, JPG, "
+                    "JPEG, and PNG."
                 ),
             )
 
@@ -1092,52 +1218,43 @@ async def generate_complaint_route(
         try:
             extracted_text = extract_text_from_file(
                 filename,
-                file_bytes
+                file_bytes,
             )
         except RuntimeError as error:
-            print("Evidence processing error:", error)
             raise HTTPException(
                 status_code=500,
                 detail=str(error),
             )
         except Exception as error:
-            print(
-                f"Evidence extraction warning for {filename}:",
-                error
-            )
+            print("Evidence extraction warning:", filename, error)
             extracted_text = ""
 
-        uploaded_evidence_names.append(filename)
+        extracted_text = extracted_text.strip()
+        evidence_filenames.append(filename)
 
-        if extracted_text.strip():
-            uploaded_evidence_texts.append(
-                f"Uploaded supporting file: {filename}\n"
-                f"{extracted_text[:12000]}"
-            )
-        else:
-            uploaded_evidence_texts.append(
-                f"Uploaded supporting file: {filename}\n"
-                "[No readable text could be extracted from this file. "
-                "Treat it only as user-supplied supporting material.]"
-            )
-
-    evidence_parts = []
-
-    if evidence:
-        evidence_parts.append(
-            "User-provided evidence description:\n"
-            f"{evidence}"
+        relevance = classify_evidence_relevance(
+            complaint_type=complaint_type,
+            problem_description=problem_description,
+            filename=filename,
+            extracted_text=extracted_text,
         )
 
-    if uploaded_evidence_texts:
-        evidence_parts.append(
-            "Text extracted from uploaded supporting evidence:\n\n"
-            + "\n\n".join(uploaded_evidence_texts)
+        relevance["characters_extracted"] = len(extracted_text)
+        evidence_results.append(relevance)
+
+        evidence_text_blocks.append(
+            (
+                f"FILE: {filename}\n"
+                f"RELEVANCE: {relevance['relevance']}\n"
+                f"REASON: {relevance['reason']}\n"
+                f"ATTACHMENT RECOMMENDATION: "
+                f"{relevance['recommendation']}\n"
+                f"EXTRACTED USER-SUPPLIED CONTENT:\n"
+                f"{extracted_text[:12000] if extracted_text else '[No readable text extracted]'}"
+            )
         )
 
-    combined_evidence = "\n\n".join(
-        evidence_parts
-    ).strip()
+    uploaded_evidence_text = "\n\n".join(evidence_text_blocks)
 
     try:
         result = generate_complaint(
@@ -1150,12 +1267,13 @@ async def generate_complaint_route(
             incident_date=incident_date,
             incident_location=incident_location,
             amount_involved=amount_involved,
-            evidence=combined_evidence,
+            evidence=evidence,
             desired_relief=desired_relief,
+            uploaded_evidence_text=uploaded_evidence_text,
+            uploaded_evidence_files=evidence_filenames,
         )
 
     except ValueError as error:
-        print("Complaint validation error:", error)
         raise HTTPException(
             status_code=400,
             detail=str(error),
@@ -1173,22 +1291,16 @@ async def generate_complaint_route(
 
     print("Complaint generated successfully.")
 
-    if uploaded_evidence_names:
-        print(
-            "Evidence files processed:",
-            ", ".join(uploaded_evidence_names)
-        )
-
     return {
         "status": "success",
         "mode": "complaint_generation",
         "complaint_type": result["complaint_type"],
         "complaint_label": result["complaint_label"],
         "draft": result["draft"],
-        "evidence_files_processed": uploaded_evidence_names,
+        "evidence_files": evidence_results,
         "evidence_notice": (
-            "Uploaded evidence is treated as user-supplied "
-            "supporting material. LawMate AI does not verify "
+            "LawMate assesses only apparent relevance of "
+            "user-supplied material. It does not verify "
             "authenticity, originality, editing history, "
             "completeness, or legal admissibility."
         ),
