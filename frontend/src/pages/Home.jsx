@@ -46,6 +46,14 @@ function Home() {
           }
         />
 
+        <ActionButton
+          text="Assess My Case"
+          color="#7C3AED"
+          onClick={() =>
+            navigate("/case-assessment")
+          }
+        />
+
       </div>
 
 
@@ -69,6 +77,11 @@ function Home() {
         <FeatureCard
           title="Complaint Generator"
           description="Generate consumer, cybercrime, police, workplace, and general legal complaint drafts using AI."
+        />
+
+        <FeatureCard
+          title="Case Assessment"
+          description="Review case facts, supporting evidence, uncertainties, and possible next steps with a cautious AI-assisted assessment."
         />
 
       </section>

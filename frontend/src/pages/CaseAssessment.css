@@ -1,0 +1,373 @@
+/* ==========================================
+            CASE ASSESSMENT PAGE
+========================================== */
+
+.case-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 30px 24px 50px;
+  box-sizing: border-box;
+}
+
+
+.case-page h1 {
+  margin: 5px 0 12px;
+  text-align: center;
+  font-size: 2.2rem;
+  color: #0f172a;
+}
+
+
+.case-intro {
+  max-width: 780px;
+  margin: 0 auto 18px;
+  text-align: center;
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+
+.case-warning {
+  max-width: 850px;
+  margin: 0 auto 28px;
+  padding: 14px 18px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 5px solid #f97316;
+  border-radius: 8px;
+  color: #9a3412;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+
+/* ==========================================
+                  FORM
+========================================== */
+
+.case-form {
+  max-width: 850px;
+  margin: 0 auto;
+  padding: 30px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 28px rgba(15, 23, 42, 0.07);
+  box-sizing: border-box;
+}
+
+
+.case-form-section {
+  margin-bottom: 10px;
+}
+
+
+.case-form-section h2 {
+  margin: 0 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+  color: #1e3a8a;
+  font-size: 1.3rem;
+}
+
+
+.case-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-bottom: 18px;
+  color: #334155;
+  font-weight: 600;
+  text-align: left;
+}
+
+
+.case-form input,
+.case-form textarea,
+.case-form select {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  font-family: inherit;
+  font-size: 15px;
+  color: #0f172a;
+  background: #ffffff;
+  box-sizing: border-box;
+  outline: none;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
+}
+
+
+.case-form textarea {
+  resize: vertical;
+}
+
+
+.case-form input:focus,
+.case-form textarea:focus,
+.case-form select:focus {
+  border-color: #2563eb;
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+
+.case-form-grid {
+  display: grid;
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+
+.case-required {
+  color: #dc2626;
+  margin-left: 3px;
+}
+
+
+/* ==========================================
+                  BUTTON
+========================================== */
+
+.case-submit-button {
+  display: block;
+  width: 220px;
+  margin: 12px auto 0;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 10px;
+  background: #7c3aed;
+  color: #ffffff;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 0.2s,
+    transform 0.2s,
+    box-shadow 0.2s;
+}
+
+
+.case-submit-button:hover:not(:disabled) {
+  background: #6d28d9;
+  transform: translateY(-1px);
+  box-shadow:
+    0 6px 16px rgba(124, 58, 237, 0.2);
+}
+
+
+.case-submit-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+
+/* ==========================================
+                  ERROR
+========================================== */
+
+.case-error {
+  margin: 18px 0;
+  padding: 14px 16px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-left: 5px solid #dc2626;
+  border-radius: 8px;
+  color: #991b1b;
+  line-height: 1.5;
+}
+
+
+/* ==========================================
+                  LOADING
+========================================== */
+
+.case-loading {
+  max-width: 850px;
+  margin: 28px auto;
+  padding: 22px;
+  background: #f5f3ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 12px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+
+.case-loading h3 {
+  margin: 0 0 8px;
+  color: #6d28d9;
+}
+
+
+.case-loading p {
+  margin: 0;
+  color: #475569;
+}
+
+
+/* ==========================================
+                  RESULT
+========================================== */
+
+.case-result {
+  width: 100%;
+  max-width: 950px;
+  margin: 38px auto 0;
+  padding: 32px 38px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
+  box-sizing: border-box;
+  text-align: left;
+}
+
+
+.case-result > h2 {
+  margin: 0 0 20px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #e2e8f0;
+  text-align: center;
+  color: #0f172a;
+  font-size: 1.7rem;
+}
+
+
+.case-prediction-notice {
+  margin-bottom: 22px;
+  padding: 13px 15px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-left: 4px solid #f97316;
+  border-radius: 8px;
+  color: #9a3412;
+  line-height: 1.6;
+}
+
+
+.case-result-content {
+  color: #334155;
+  line-height: 1.75;
+  font-size: 16px;
+  overflow-wrap: anywhere;
+}
+
+
+.case-result-content h1,
+.case-result-content h2,
+.case-result-content h3 {
+  color: #0f172a;
+  text-align: left;
+}
+
+
+.case-result-content h1 {
+  margin: 25px 0 16px;
+  font-size: 1.7rem;
+}
+
+
+.case-result-content h2 {
+  margin: 25px 0 12px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 1.3rem;
+}
+
+
+.case-result-content h3 {
+  margin: 22px 0 10px;
+  font-size: 1.15rem;
+}
+
+
+.case-result-content p {
+  margin: 9px 0 15px;
+  line-height: 1.75;
+}
+
+
+.case-result-content ul,
+.case-result-content ol {
+  margin: 10px 0 18px;
+  padding-left: 27px;
+}
+
+
+.case-result-content li {
+  margin-bottom: 8px;
+  line-height: 1.7;
+}
+
+
+.case-result-content strong {
+  color: #0f172a;
+}
+
+
+/* ==========================================
+                FOOTER NOTE
+========================================== */
+
+.case-footer-note {
+  max-width: 850px;
+  margin: 25px auto 0;
+  padding: 14px 18px;
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+  border-left: 5px solid #64748b;
+  border-radius: 8px;
+  color: #475569;
+  line-height: 1.6;
+  box-sizing: border-box;
+}
+
+
+/* ==========================================
+                RESPONSIVE
+========================================== */
+
+@media (max-width: 768px) {
+
+  .case-page {
+    padding: 20px 14px 35px;
+  }
+
+
+  .case-page h1 {
+    font-size: 1.8rem;
+  }
+
+
+  .case-form {
+    padding: 22px 18px;
+  }
+
+
+  .case-form-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+
+  .case-submit-button {
+    width: 100%;
+  }
+
+
+  .case-result {
+    padding: 22px 18px;
+  }
+
+
+  .case-result-content {
+    font-size: 15px;
+  }
+
+}

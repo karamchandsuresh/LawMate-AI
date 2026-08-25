@@ -7,6 +7,7 @@ import Home from "./pages/Home";
 import Chat from "./pages/Chat";
 import Upload from "./pages/Upload";
 import Complaint from "./pages/Complaint";
+import CaseAssessment from "./pages/CaseAssessment";
 import About from "./pages/About";
 
 import {
@@ -68,6 +69,11 @@ function AppContent() {
           <Route
             path="/complaint"
             element={<Complaint />}
+          />
+
+          <Route
+            path="/case-assessment"
+            element={<CaseAssessment />}
           />
 
           <Route

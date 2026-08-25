@@ -22,6 +22,7 @@ from services.multilingual_service import (
     prepare_multilingual_query,
     prepare_multilingual_response,
 )
+from services.case_predictor import assess_case
 
 
 # ============================================================
@@ -103,6 +104,15 @@ class ComplaintRequest(BaseModel):
     amount_involved: str = ""
     evidence: str = ""
     desired_relief: str = ""
+
+
+class CaseAssessmentRequest(BaseModel):
+    case_type: str
+    case_facts: str
+    user_role: str = ""
+    opposite_party: str = ""
+    evidence_summary: str = ""
+    desired_outcome: str = ""
 
 
 # ============================================================
@@ -506,6 +516,7 @@ def home():
         "document_analyzer": "enabled",
         "complaint_generator": "enabled",
         "multilingual_chat": "enabled",
+        "case_assessment": "enabled",
         "supported_documents": [
             "PDF",
             "DOCX",
@@ -777,6 +788,64 @@ def chat(request: ChatRequest):
         "grounded": True,
         "sources": sources,
         "language": user_language,
+    }
+
+
+# ============================================================
+# CASE ASSESSMENT ROUTE
+# ============================================================
+
+@app.post("/assess-case")
+def assess_case_route(request: CaseAssessmentRequest):
+    """
+    Provide a cautious qualitative assessment of a
+    user-described legal case.
+
+    This endpoint does not predict a guaranteed court result.
+    """
+
+    print()
+    print("=" * 70)
+    print("LAWMATE AI CASE ASSESSMENT")
+    print("=" * 70)
+    print("Case type:", request.case_type)
+
+    try:
+        result = assess_case(
+            case_type=request.case_type,
+            case_facts=request.case_facts,
+            user_role=request.user_role,
+            opposite_party=request.opposite_party,
+            evidence_summary=request.evidence_summary,
+            desired_outcome=request.desired_outcome,
+        )
+
+    except ValueError as error:
+        print("Case assessment validation error:", error)
+        raise HTTPException(status_code=400, detail=str(error))
+
+    except Exception as error:
+        print("Case assessment error:", error)
+        raise HTTPException(
+            status_code=500,
+            detail=(
+                "LawMate encountered an error while "
+                "assessing this case."
+            ),
+        )
+
+    print("Case assessment completed successfully.")
+
+    return {
+        "status": "success",
+        "mode": "case_assessment",
+        "case_type": result["case_type"],
+        "assessment": result["assessment"],
+        "prediction_notice": (
+            "This is a qualitative case assessment based "
+            "only on the information supplied by the user. "
+            "It does not predict or guarantee a court outcome."
+        ),
     }
 
 

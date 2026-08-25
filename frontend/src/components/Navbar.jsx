@@ -34,6 +34,10 @@ function Navbar() {
           Complaint
         </Link>
 
+        <Link to="/case-assessment">
+          Case Assessment
+        </Link>
+
         <Link to="/about">
           About
         </Link>
