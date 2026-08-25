@@ -1,4 +1,5 @@
 import os
+import re
 
 from fastapi import (
     FastAPI,
@@ -113,6 +114,31 @@ class CaseAssessmentRequest(BaseModel):
     opposite_party: str = ""
     evidence_summary: str = ""
     desired_outcome: str = ""
+    language: str = "en"
+
+
+LANGUAGE_CODE_MAP = {
+    "en": "english",
+    "hi": "hindi",
+    "ml": "malayalam",
+    "ta": "tamil",
+    "kn": "kannada",
+    "te": "telugu",
+    "english": "english",
+    "hindi": "hindi",
+    "malayalam": "malayalam",
+    "tamil": "tamil",
+    "kannada": "kannada",
+    "telugu": "telugu",
+}
+
+
+def resolve_response_language(language):
+    if not language:
+        return "english"
+
+    normalized = language.strip().lower()
+    return LANGUAGE_CODE_MAP.get(normalized, "english")
 
 
 # ============================================================
@@ -159,11 +185,18 @@ GREETINGS = {
 def normalize_message(message):
     """
     Normalize message for simple greeting detection.
+
+    Lowercase the message, remove punctuation/symbols, and normalize
+    whitespace so greetings such as "Thank you!", "Hi!", and
+    "Hello!!" match the local greeting list.
     """
 
-    return " ".join(
-        message.lower().strip().split()
+    cleaned = "".join(
+        character if character.isalnum() or character.isspace() else " "
+        for character in message.lower().strip()
     )
+
+    return " ".join(cleaned.split())
 
 
 def is_greeting(message):
@@ -371,63 +404,90 @@ def format_verified_sources(
     sources
 ):
     """
-    Format ChromaDB source metadata as:
+    Format verified source metadata for user-facing citations.
 
-    [L1]
-    [L2]
-    [L3]
-
-    L = LawMate verified source.
+    Internal chunk identifiers are hidden because they are useful for
+    retrieval/debugging but not meaningful to end users. Duplicate
+    chunks from the same source document are shown only once.
     """
 
     citation_lines = []
-
     seen = set()
+
+    source_type_labels = {
+        "law_commission": "Law Commission of India",
+        "india_code": "India Code",
+        "supreme_court": "Supreme Court of India",
+        "high_court": "High Court",
+        "gazette": "Gazette of India",
+    }
+
+    def clean_source_title(source_file):
+        title = source_file or "Unknown Document"
+
+        title = re.sub(
+            r"\.(txt|pdf|docx?)$",
+            "",
+            title,
+            flags=re.IGNORECASE,
+        )
+
+        title = re.sub(
+            r"^\d+[\s_\-]*",
+            "",
+            title,
+        )
+
+        title = title.replace("_", " ")
+        title = re.sub(r"\s+", " ", title).strip()
+
+        return title or "Unknown Document"
 
     citation_number = 1
 
     for source in sources:
-
-        source_type = source.get(
+        raw_source_type = source.get(
             "source_type",
-            "Unknown Source"
+            "Unknown Source",
         )
 
         source_file = source.get(
             "source_file",
-            "Unknown Document"
-        )
-
-        source_chunk = source.get(
-            "source_chunk",
-            "Unknown"
+            "Unknown Document",
         )
 
         citation_key = (
-            source_type,
-            source_file,
-            source_chunk
+            str(raw_source_type).strip().lower(),
+            str(source_file).strip().lower(),
         )
 
         if citation_key in seen:
             continue
 
-        seen.add(
-            citation_key
+        seen.add(citation_key)
+
+        source_label = source_type_labels.get(
+            str(raw_source_type).strip().lower(),
+            str(raw_source_type)
+            .replace("_", " ")
+            .strip()
+            .title()
+            or "Unknown Source",
+        )
+
+        readable_title = clean_source_title(
+            source_file
         )
 
         citation_lines.append(
             f"[L{citation_number}] "
-            f"{source_type} — "
-            f"{source_file} "
-            f"(Chunk {source_chunk})"
+            f"{source_label} — "
+            f"{readable_title}"
         )
 
         citation_number += 1
 
-    return "\n".join(
-        citation_lines
-    )
+    return "\n".join(citation_lines)
 
 
 # ============================================================
@@ -870,6 +930,9 @@ def assess_case_route(request: CaseAssessmentRequest):
     print("=" * 70)
     print("Case type:", request.case_type)
 
+    response_language = resolve_response_language(request.language)
+    print("Response language:", response_language)
+
     try:
         result = assess_case(
             case_type=request.case_type,
@@ -894,18 +957,35 @@ def assess_case_route(request: CaseAssessmentRequest):
             ),
         )
 
+    assessment = result["assessment"]
+    prediction_notice = (
+        "This is a qualitative case assessment based "
+        "only on the information supplied by the user. "
+        "It does not predict or guarantee a court outcome."
+    )
+
+    if response_language != "english":
+        try:
+            assessment = prepare_multilingual_response(
+                assessment,
+                response_language,
+            )
+            prediction_notice = prepare_multilingual_response(
+                prediction_notice,
+                response_language,
+            )
+        except Exception as error:
+            print("Case assessment translation error:", error)
+
     print("Case assessment completed successfully.")
 
     return {
         "status": "success",
         "mode": "case_assessment",
         "case_type": result["case_type"],
-        "assessment": result["assessment"],
-        "prediction_notice": (
-            "This is a qualitative case assessment based "
-            "only on the information supplied by the user. "
-            "It does not predict or guarantee a court outcome."
-        ),
+        "assessment": assessment,
+        "prediction_notice": prediction_notice,
+        "language": response_language,
     }
 
 
@@ -915,7 +995,8 @@ def assess_case_route(request: CaseAssessmentRequest):
 
 @app.post("/analyze-document")
 async def analyze_document(
-    file: UploadFile = File(...)
+    file: UploadFile = File(...),
+    language: str = Form("en"),
 ):
     """
     Analyze an uploaded legal document.
@@ -932,6 +1013,9 @@ async def analyze_document(
     print("=" * 70)
     print("LAWMATE AI DOCUMENT ANALYZER")
     print("=" * 70)
+
+    response_language = resolve_response_language(language)
+    print("Response language:", response_language)
 
 
     # ========================================================
@@ -1103,18 +1187,23 @@ async def analyze_document(
     )
 
 
+    analysis = result["analysis"]
+
+    if response_language != "english":
+        try:
+            analysis = prepare_multilingual_response(
+                analysis,
+                response_language,
+            )
+        except Exception as error:
+            print("Document analysis translation error:", error)
+
     return {
         "status": "success",
         "mode": "document_analysis",
-        "filename": result[
-            "filename"
-        ],
-        "characters_extracted": result[
-            "characters_extracted"
-        ],
-        "analysis": result[
-            "analysis"
-        ],
+        "filename": result["filename"],
+        "characters_extracted": result["characters_extracted"],
+        "analysis": analysis,
         "supported_formats": [
             "PDF",
             "DOCX",
@@ -1122,6 +1211,7 @@ async def analyze_document(
             "JPEG",
             "PNG",
         ],
+        "language": response_language,
     }
 
 # ============================================================
@@ -1288,6 +1378,7 @@ async def generate_complaint_route(
     amount_involved: str = Form(""),
     evidence: str = Form(""),
     desired_relief: str = Form(""),
+    language: str = Form("en"),
     evidence_files: list[UploadFile] | None = File(None),
 ):
     """
@@ -1311,8 +1402,10 @@ async def generate_complaint_route(
     amount_involved = amount_involved.strip()
     evidence = evidence.strip()
     desired_relief = desired_relief.strip()
+    response_language = resolve_response_language(language)
 
     print("Complaint type:", complaint_type)
+    print("Response language:", response_language)
 
     uploaded_files = [
         file
@@ -1447,17 +1540,42 @@ async def generate_complaint_route(
 
     print("Complaint generated successfully.")
 
+    draft = result["draft"]
+    evidence_notice = (
+        "LawMate assesses only apparent relevance of "
+        "user-supplied material. It does not verify "
+        "authenticity, originality, editing history, "
+        "completeness, or legal admissibility."
+    )
+
+    if response_language != "english":
+        try:
+            draft = prepare_multilingual_response(
+                draft,
+                response_language,
+            )
+            evidence_notice = prepare_multilingual_response(
+                evidence_notice,
+                response_language,
+            )
+
+            for evidence_result in evidence_results:
+                if evidence_result.get("status"):
+                    evidence_result["status"] = prepare_multilingual_response(
+                        evidence_result["status"],
+                        response_language,
+                    )
+
+        except Exception as error:
+            print("Complaint response translation error:", error)
+
     return {
         "status": "success",
         "mode": "complaint_generation",
         "complaint_type": result["complaint_type"],
         "complaint_label": result["complaint_label"],
-        "draft": result["draft"],
+        "draft": draft,
         "evidence_files": evidence_results,
-        "evidence_notice": (
-            "LawMate assesses only apparent relevance of "
-            "user-supplied material. It does not verify "
-            "authenticity, originality, editing history, "
-            "completeness, or legal admissibility."
-        ),
+        "evidence_notice": evidence_notice,
+        "language": response_language,
     }

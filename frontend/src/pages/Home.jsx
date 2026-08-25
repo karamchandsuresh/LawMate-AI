@@ -6,10 +6,12 @@ import FeatureCard from "../components/FeatureCard";
 import InfoSection from "../components/InfoSection";
 
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../context/LanguageContext";
 
 
 function Home() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
 
   return (
@@ -21,7 +23,7 @@ function Home() {
       <div className="buttons">
 
         <ActionButton
-          text="Ask a Legal Question"
+          text={t.home.ask}
           color="#2563EB"
           onClick={() =>
             navigate("/chat")
@@ -30,7 +32,7 @@ function Home() {
 
 
         <ActionButton
-          text="Upload Document"
+          text={t.home.upload}
           color="#16A34A"
           onClick={() =>
             navigate("/upload")
@@ -39,7 +41,7 @@ function Home() {
 
 
         <ActionButton
-          text="Generate Complaint"
+          text={t.home.complaint}
           color="#DC2626"
           onClick={() =>
             navigate("/complaint")
@@ -47,7 +49,7 @@ function Home() {
         />
 
         <ActionButton
-          text="Assess My Case"
+          text={t.home.assess}
           color="#7C3AED"
           onClick={() =>
             navigate("/case-assessment")
@@ -63,25 +65,25 @@ function Home() {
       <section className="features">
 
         <FeatureCard
-          title="AI Legal Chat"
-          description="Ask legal questions and receive AI-powered answers grounded in Indian laws."
+          title={t.home.chatTitle}
+          description={t.home.chatDesc}
         />
 
 
         <FeatureCard
-          title="Document Analyzer"
-          description="Upload PDF, DOCX, or image files and understand legal documents in simple language."
+          title={t.home.docTitle}
+          description={t.home.docDesc}
         />
 
 
         <FeatureCard
-          title="Complaint Generator"
-          description="Generate consumer, cybercrime, police, workplace, and general legal complaint drafts using AI."
+          title={t.home.complaintTitle}
+          description={t.home.complaintDesc}
         />
 
         <FeatureCard
-          title="Case Assessment"
-          description="Review case facts, supporting evidence, uncertainties, and possible next steps with a cautious AI-assisted assessment."
+          title={t.home.caseTitle}
+          description={t.home.caseDesc}
         />
 
       </section>

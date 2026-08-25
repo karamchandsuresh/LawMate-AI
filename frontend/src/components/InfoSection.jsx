@@ -1,34 +1,28 @@
 import "./InfoSection.css";
+import { useLanguage } from "../context/LanguageContext";
+import { languages } from "../context/translations";
 
 function InfoSection() {
+  const { language, setLanguage, t } = useLanguage();
+
   return (
     <section className="info-section">
-
-      <h2>🌍 Multilingual Legal Assistance</h2>
-
-      <p>
-        LawMate AI supports multiple Indian languages,
-        making legal guidance accessible to everyone.
-      </p>
+      <h2>{t.multilingualTitle}</h2>
+      <p>{t.multilingualText}</p>
 
       <div className="languages">
-
-        <span>🇬🇧 English</span>
-
-        <span>🇮🇳 हिन्दी</span>
-
-        <span>🇮🇳 ಕನ್ನಡ</span>
-
-        <span>🇮🇳 தமிழ்</span>
-
-        <span>🇮🇳 తెలుగు</span>
-
-        <span>🇮🇳 മലയാളം</span>
-
+        {languages.map((item) => (
+          <button
+            type="button"
+            key={item.code}
+            className={language === item.code ? "language-active" : ""}
+            onClick={() => setLanguage(item.code)}
+          >
+            {item.label}
+          </button>
+        ))}
       </div>
-
     </section>
   );
 }
-
 export default InfoSection;

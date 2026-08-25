@@ -6,11 +6,13 @@ import { useNavigate } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 
 import remarkGfm from "remark-gfm";
+import { useLanguage } from "../context/LanguageContext";
 
 
 function Chat() {
 
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [message, setMessage] = useState("");
 
@@ -186,14 +188,12 @@ function Chat() {
     <div className="chat-page">
 
 
-      <h1>⚖️ LawMate AI Assistant</h1>
+      <h1>{t.chat.title}</h1>
 
 
       <p>
 
-        Ask any legal question and receive AI-powered answers
-
-        grounded in trusted Indian legal sources.
+        {t.chat.intro}
 
       </p>
 
@@ -270,7 +270,7 @@ function Chat() {
 
               <span>
 
-                LawMate AI is thinking
+                {t.chat.thinkingBubble}
 
               </span>
 
@@ -298,7 +298,7 @@ function Chat() {
 
           <textarea
 
-            placeholder="Ask your legal question..."
+            placeholder={t.chat.placeholder}
 
             value={message}
 
@@ -325,9 +325,9 @@ function Chat() {
 
             {isLoading
 
-              ? "Thinking..."
+              ? t.chat.thinking
 
-              : "Send"}
+              : t.chat.send}
 
           </button>
 

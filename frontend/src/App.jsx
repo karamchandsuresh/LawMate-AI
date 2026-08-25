@@ -1,4 +1,5 @@
 import "./App.css";
+import { LanguageProvider } from "./context/LanguageContext";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -103,9 +104,9 @@ function App() {
   return (
 
     <BrowserRouter>
-
-      <AppContent />
-
+      <LanguageProvider>
+        <AppContent />
+      </LanguageProvider>
     </BrowserRouter>
 
   );
