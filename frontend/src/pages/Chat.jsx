@@ -1,6 +1,7 @@
 import "./Chat.css";
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 import ReactMarkdown from "react-markdown";
 
@@ -8,6 +9,8 @@ import remarkGfm from "remark-gfm";
 
 
 function Chat() {
+
+  const navigate = useNavigate();
 
   const [message, setMessage] = useState("");
 
@@ -108,6 +111,10 @@ function Chat() {
           sender: "ai",
 
           text: data.reply,
+
+          route: data.route || null,
+
+          actionLabel: data.action_label || null,
 
         },
 
@@ -232,6 +239,21 @@ function Chat() {
 
                 )}
 
+
+              {msg.sender === "ai" &&
+                  msg.route &&
+                  msg.actionLabel && (
+
+                    <button
+                      className="chat-route-button"
+                      onClick={() =>
+                        navigate(msg.route)
+                      }
+                    >
+                      {msg.actionLabel}
+                    </button>
+
+                  )}
 
               </div>
 

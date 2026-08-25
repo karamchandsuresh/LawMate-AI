@@ -208,128 +208,91 @@ def is_greeting(message):
 
 def classify_intent(message):
     """
-    Classify a user message as:
+    Classify a user message into one LawMate workflow.
 
-    legal
+    Categories:
+    legal_question
+    complaint_request
+    case_assessment
+    document_analysis
     non_legal
-
-    Greetings are detected before reaching this function.
     """
 
     prompt = f"""
-You are an intent classifier for LawMate AI.
-
-LawMate AI is an Indian legal information assistant.
+You are the workflow intent router for LawMate AI.
 
 Classify the user's message into EXACTLY ONE category:
 
-legal
+legal_question
+complaint_request
+case_assessment
+document_analysis
 non_legal
 
-LEGAL includes questions about:
+Definitions:
 
-- Indian laws
-- Acts
-- sections
-- legal rights
-- Constitution
-- criminal matters
-- civil matters
-- contracts
-- property
-- employment rights
-- consumer disputes
-- cyber law
-- privacy
-- family law
-- marriage
-- divorce
-- maintenance
-- domestic violence
-- police
-- FIR
-- bail
-- arrest
-- courts
-- judgments
-- legal remedies
-- complaints
-- legal procedures
-- situations where the user may have a legal problem
+legal_question:
+The user is asking an ordinary legal question about Indian
+law, rights, procedures, Acts, sections, courts, remedies,
+consumer issues, employment, family law, criminal law,
+civil law, cyber law, property law, or similar topics.
 
-A question can be legal even if it does NOT explicitly
-contain words such as "law", "legal", "court", or "Act".
+complaint_request:
+The user clearly wants LawMate to create, draft, write,
+prepare, or generate a complaint.
 
-Examples:
+case_assessment:
+The user clearly wants LawMate to assess the strength,
+weakness, outlook, or overall position of their case.
 
-"What is Bharatiya Nyaya Sanhita?"
-legal
+document_analysis:
+The user wants to upload, review, analyze, explain,
+summarize, or check a document, agreement, notice,
+PDF, DOCX, image, or similar file.
 
-"Can my landlord remove me without notice?"
-legal
+non_legal:
+The request is unrelated to legal assistance.
 
-"My employer has not paid my salary. What can I do?"
-legal
-
-"Someone posted my photo online without permission."
-legal
-
-"Who is the best football player?"
-non_legal
-
-"How do I cook pasta?"
-non_legal
-
-"What is Python?"
-non_legal
+Important:
+If the user is only asking a general legal question that
+mentions complaints, cases, or documents, use legal_question
+unless they clearly request one of the specialized workflows.
 
 USER MESSAGE:
 
 {message}
 
-Return ONLY:
-
-legal
-
-or
-
-non_legal
+Return ONLY one category.
 """
 
     try:
-
-        response = (
-            gemini_client.models.generate_content(
-                model=ROUTER_MODEL,
-                contents=prompt
-            )
+        response = gemini_client.models.generate_content(
+            model=ROUTER_MODEL,
+            contents=prompt
         )
 
-        intent = (
-            response.text
-            .strip()
-            .lower()
-        )
+        intent = response.text.strip().lower()
 
-        if intent == "legal":
-            return "legal"
+        allowed_intents = {
+            "legal_question",
+            "complaint_request",
+            "case_assessment",
+            "document_analysis",
+            "non_legal",
+        }
 
-        if intent == "non_legal":
-            return "non_legal"
+        if intent in allowed_intents:
+            return intent
 
-        # Safe fallback
-        return "legal"
+        return "legal_question"
 
     except Exception as error:
-
         print(
             "Intent classification error:",
             error
         )
 
-        # If classification fails, allow RAG to try rather
-        # than incorrectly rejecting a legal question.
-        return "legal"
+        return "legal_question"
 
 
 # ============================================================
@@ -603,6 +566,103 @@ def chat(request: ChatRequest):
     intent = classify_intent(message)
 
     print("Intent:", intent)
+
+    if intent == "complaint_request":
+
+        english_reply = (
+            "This looks like a complaint-drafting request. "
+            "LawMate's Complaint Generator can collect the "
+            "required details and prepare a structured draft.\n\n"
+            "Would you like to continue to the Complaint Generator?"
+        )
+
+        try:
+            reply = prepare_multilingual_response(
+                english_reply,
+                user_language
+            )
+        except Exception as error:
+            print(
+                "Complaint routing translation error:",
+                error
+            )
+            reply = english_reply
+
+        return {
+            "reply": reply,
+            "mode": "route",
+            "grounded": False,
+            "sources": [],
+            "language": user_language,
+            "route": "/complaint",
+            "action_label": "Generate Complaint →",
+        }
+
+
+    if intent == "case_assessment":
+
+        english_reply = (
+            "This looks like a case-assessment request. "
+            "LawMate's Case Assessment tool can review your "
+            "facts, evidence, strengths, uncertainties, and "
+            "possible next steps.\n\n"
+            "Would you like to continue to Case Assessment?"
+        )
+
+        try:
+            reply = prepare_multilingual_response(
+                english_reply,
+                user_language
+            )
+        except Exception as error:
+            print(
+                "Case routing translation error:",
+                error
+            )
+            reply = english_reply
+
+        return {
+            "reply": reply,
+            "mode": "route",
+            "grounded": False,
+            "sources": [],
+            "language": user_language,
+            "route": "/case-assessment",
+            "action_label": "Assess My Case →",
+        }
+
+
+    if intent == "document_analysis":
+
+        english_reply = (
+            "This looks like a document-analysis request. "
+            "LawMate's Document Analyzer can process PDF, DOCX, "
+            "JPG, JPEG, and PNG files and explain their contents.\n\n"
+            "Would you like to continue to Document Analysis?"
+        )
+
+        try:
+            reply = prepare_multilingual_response(
+                english_reply,
+                user_language
+            )
+        except Exception as error:
+            print(
+                "Document routing translation error:",
+                error
+            )
+            reply = english_reply
+
+        return {
+            "reply": reply,
+            "mode": "route",
+            "grounded": False,
+            "sources": [],
+            "language": user_language,
+            "route": "/upload",
+            "action_label": "Upload & Analyze Document →",
+        }
+
 
     if intent == "non_legal":
 
