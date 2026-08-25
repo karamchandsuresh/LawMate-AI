@@ -1,63 +1,72 @@
-/* ==========================================
-            FEATURE CARD
-========================================== */
-
-
-/* ==========================================
-          FEATURE CARD LAYOUT
-========================================== */
-
 .feature-card {
-  width: 320px;
-
-  background: white;
-
-  padding: 30px;
-
-  border-radius: 15px;
-
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-
-  transition: 0.3s;
-
-  box-sizing: border-box;
+  width: 100%;
+  min-height: 178px;
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  padding: 26px;
+  border: 1px solid #e2e8f0;
+  border-radius: 18px;
+  background: #ffffff;
+  box-shadow: var(--shadow-sm);
+  transition:
+    transform 0.22s ease,
+    box-shadow 0.22s ease,
+    border-color 0.22s ease;
 }
-
-
-/* ==========================================
-          FEATURE CARD HOVER
-========================================== */
 
 .feature-card:hover {
-  transform: translateY(-8px);
-
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: #d7c69e;
 }
 
+.feature-icon {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #fff5d9;
+  color: #b77709;
+  font-size: 1.45rem;
+}
 
-/* ==========================================
-          FEATURE CARD HEADING
-========================================== */
+.feature-blue .feature-icon {
+  background: #eaf3ff;
+  color: #1d64c8;
+}
+
+.feature-green .feature-icon {
+  background: #eaf9ef;
+  color: #16803d;
+}
+
+.feature-purple .feature-icon {
+  background: #f2ecff;
+  color: #6d3ad0;
+}
+
+.feature-orange .feature-icon {
+  background: #fff2e5;
+  color: #d66b0e;
+}
+
+.feature-card-copy {
+  min-width: 0;
+}
 
 .feature-card h3 {
-  color: #0F172A;
-
-  margin-bottom: 15px;
-
-  font-size: 1.4rem;
+  margin: 1px 0 9px;
+  color: var(--navy-950);
+  font-size: 1.12rem;
+  font-weight: 750;
 }
 
-
-/* ==========================================
-          FEATURE CARD DESCRIPTION
-========================================== */
-
 .feature-card p {
-  color: #4B5563;
-
-  line-height: 1.7;
-
-  font-size: 1rem;
-
-  margin-bottom: 0;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.65;
 }

@@ -1,6 +1,32 @@
-/* ===========================
-   Global Styles
-=========================== */
+:root {
+  font-family: "Segoe UI", "Noto Sans", Arial, sans-serif;
+  color: #10213f;
+  background: #f7f8fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+
+  --navy-950: #071a33;
+  --navy-900: #0a2342;
+  --navy-800: #12345b;
+  --navy-700: #1b4b79;
+  --gold-600: #c9850b;
+  --gold-500: #e3a51b;
+  --gold-400: #f0bd45;
+  --cream-50: #fffdf8;
+  --cream-100: #fff8e9;
+  --surface: #ffffff;
+  --surface-soft: #f8fafc;
+  --border: #dfe6ef;
+  --text: #10213f;
+  --muted: #617089;
+  --success: #15803d;
+  --danger: #b42318;
+  --shadow-sm: 0 8px 24px rgba(7, 26, 51, 0.08);
+  --shadow-md: 0 18px 46px rgba(7, 26, 51, 0.12);
+  --radius-sm: 12px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+}
 
 * {
   margin: 0;
@@ -8,18 +34,47 @@
   box-sizing: border-box;
 }
 
-/* ===========================
-   Body
-=========================== */
-
-body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: #f5f7fb;
+html {
+  scroll-behavior: smooth;
+  background: #f7f8fb;
 }
 
-/* ===========================
-   Root
-=========================== */
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(circle at top right, rgba(227, 165, 27, 0.06), transparent 34%),
+    #f7f8fb;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button,
+a,
+select {
+  -webkit-tap-highlight-color: transparent;
+}
+
+a {
+  color: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+::selection {
+  background: rgba(227, 165, 27, 0.28);
+  color: var(--navy-950);
+}
 
 #root {
   width: 100%;

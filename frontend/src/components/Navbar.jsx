@@ -1,5 +1,5 @@
 import "./Navbar.css";
-import { Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import { languages } from "../context/translations";
 
@@ -8,16 +8,25 @@ function Navbar() {
 
   return (
     <nav className="navbar">
-      <h2 className="logo">⚖️ LawMate AI</h2>
+      <NavLink to="/" className="brand-link" aria-label="LawMate AI Home">
+        <span className="brand-mark" aria-hidden="true">⚖</span>
+        <span className="brand-copy">
+          <strong>LawMate <em>AI</em></strong>
+          <small>Indian Legal Assistant</small>
+        </span>
+      </NavLink>
 
       <div className="nav-links">
-        <Link to="/">{t.nav.home}</Link>
-        <Link to="/chat">{t.nav.chat}</Link>
-        <Link to="/upload">{t.nav.upload}</Link>
-        <Link to="/complaint">{t.nav.complaint}</Link>
-        <Link to="/case-assessment">{t.nav.caseAssessment}</Link>
-        <Link to="/about">{t.nav.about}</Link>
+        <NavLink to="/" end>{t.nav.home}</NavLink>
+        <NavLink to="/chat">{t.nav.chat}</NavLink>
+        <NavLink to="/upload">{t.nav.upload}</NavLink>
+        <NavLink to="/complaint">{t.nav.complaint}</NavLink>
+        <NavLink to="/case-assessment">{t.nav.caseAssessment}</NavLink>
+        <NavLink to="/about">{t.nav.about}</NavLink>
+      </div>
 
+      <div className="nav-language-wrap">
+        <span className="language-globe" aria-hidden="true">🌐</span>
         <select
           className="language-selector"
           value={language}
