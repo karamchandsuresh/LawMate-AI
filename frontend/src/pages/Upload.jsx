@@ -3,6 +3,9 @@ import ReactMarkdown from "react-markdown";
 import { useLanguage } from "../context/LanguageContext";
 import "./Upload.css";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
 const uploadVisualText = {
   en: {
     panelTitle: "What LawMate can analyze",
@@ -147,7 +150,7 @@ function Upload() {
     formData.append("language", language);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/analyze-document", {
+      const response = await fetch(`${API_BASE_URL}/analyze-document`, {
         method: "POST",
         body: formData,
       });

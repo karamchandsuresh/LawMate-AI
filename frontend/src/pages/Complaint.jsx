@@ -4,6 +4,9 @@ import { useLanguage } from "../context/LanguageContext";
 import { featureTranslations } from "../context/featureTranslations";
 import "./Complaint.css";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
 function Complaint() {
   const evidenceInputRef = useRef(null);
   const { language } = useLanguage();
@@ -160,7 +163,7 @@ function Complaint() {
 
     try {
       const response = await fetch(
-        "http://127.0.0.1:8000/generate-complaint",
+        `${API_BASE_URL}/generate-complaint`,
         {
           method: "POST",
           body: requestData,

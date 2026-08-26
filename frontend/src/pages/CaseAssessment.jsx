@@ -4,6 +4,9 @@ import { useLanguage } from "../context/LanguageContext";
 import { featureTranslations } from "../context/featureTranslations";
 import "./CaseAssessment.css";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
 function CaseAssessment() {
   const { language } = useLanguage();
   const text = featureTranslations[language]?.caseAssessment || featureTranslations.en.caseAssessment;
@@ -41,7 +44,7 @@ function CaseAssessment() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/assess-case", {
+      const response = await fetch(`${API_BASE_URL}/assess-case`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ ...formData, language }),

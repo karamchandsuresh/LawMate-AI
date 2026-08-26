@@ -8,6 +8,9 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useLanguage } from "../context/LanguageContext";
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000";
+
 
 function Chat() {
 
@@ -67,7 +70,7 @@ function Chat() {
 
       const response = await fetch(
 
-        "http://127.0.0.1:8000/chat",
+        `${API_BASE_URL}/chat`,
 
         {
 
