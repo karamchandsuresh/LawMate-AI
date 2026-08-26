@@ -40,12 +40,10 @@ backend/data_pipeline/chunking/legal_chunks.txt
 backend/data_pipeline/embeddings/legal_embeddings.txt
 
 # ==========================
-# ChromaDB Generated Database
+# ChromaDB
 # ==========================
-
-backend/data_pipeline/chroma_db/*.sqlite3
-backend/data_pipeline/chroma_db/database/
-backend/data_pipeline/chroma_db/*/
+# ChromaDB is intentionally tracked for V1 deployment.
+# Render needs the existing legal_documents vector database.
 
 # ==========================
 # VS Code / IDE
