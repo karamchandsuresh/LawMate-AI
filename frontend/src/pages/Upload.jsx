@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "../context/LanguageContext";
+import { useAIModel } from "../context/AIModelContext";
 import "./Upload.css";
 
 const API_BASE_URL =
@@ -95,6 +96,7 @@ const uploadVisualText = {
 function Upload() {
   const fileInputRef = useRef(null);
   const { t, language } = useLanguage();
+  const { aiMode } = useAIModel();
   const text = t.uploadPage;
   const visualText = uploadVisualText[language] || uploadVisualText.en;
 
@@ -148,6 +150,7 @@ function Upload() {
     const formData = new FormData();
     formData.append("file", selectedFile);
     formData.append("language", language);
+    formData.append("ai_mode", aiMode);
 
     try {
       const response = await fetch(`${API_BASE_URL}/analyze-document`, {

@@ -5,7 +5,7 @@
   width: 100%;
   min-height: 76px;
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) auto minmax(180px, 0.7fr);
+  grid-template-columns: minmax(210px, 0.9fr) auto minmax(360px, 1fr);
   align-items: center;
   gap: 24px;
   padding: 12px clamp(20px, 4vw, 64px);
@@ -105,7 +105,6 @@
 }
 
 .nav-language-wrap {
-  justify-self: end;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -199,5 +198,386 @@
   .language-selector {
     min-width: 92px;
     font-size: 0.86rem;
+  }
+}
+
+/* ============================================================
+   GLOBAL AI MODEL + LANGUAGE CONTROLS
+   ============================================================ */
+
+.nav-controls {
+  justify-self: end;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  min-width: 0;
+}
+
+.nav-model-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 210px;
+  max-width: 245px;
+  padding: 7px 10px;
+  border: 1px solid rgba(240, 189, 69, 0.34);
+  border-radius: 12px;
+  background: rgba(240, 189, 69, 0.07);
+}
+
+.model-icon {
+  flex: 0 0 auto;
+  font-size: 15px;
+}
+
+.model-control {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.model-control-label {
+  color: #f0bd45;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.model-selector {
+  width: 100%;
+  min-width: 0;
+  padding: 3px 20px 3px 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  color: #ffffff;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.model-selector option {
+  color: #10213f;
+  background: #ffffff;
+}
+
+.model-mode-hint {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  color: #c8d5e6;
+  font-size: 0.61rem;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 1180px) {
+  .navbar {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .nav-model-wrap {
+    min-width: 170px;
+    max-width: 190px;
+  }
+
+  .model-mode-hint {
+    display: none;
+  }
+
+  .model-selector {
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .nav-controls {
+    justify-self: end;
+  }
+
+  .nav-model-wrap {
+    min-width: 165px;
+  }
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-link {
+    grid-column: 1;
+  }
+
+  .nav-controls {
+    grid-column: 1;
+    width: 100%;
+    justify-self: stretch;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .nav-model-wrap {
+    flex: 1 1 210px;
+    max-width: none;
+  }
+
+  .nav-language-wrap {
+    flex: 1 1 150px;
+  }
+
+  .nav-links {
+    grid-column: 1;
+  }
+}
+
+@media (max-width: 520px) {
+  .nav-controls {
+    gap: 8px;
+  }
+
+  .nav-model-wrap,
+  .nav-language-wrap {
+    width: 100%;
+    flex-basis: 100%;
+  }
+
+  .model-selector {
+    font-size: 0.82rem;
+  }
+}
+
+/* ============================================================
+   LONG-LANGUAGE NAVIGATION SAFETY
+   ============================================================ */
+
+@media (max-width: 1480px) {
+  .navbar {
+    grid-template-columns:
+      minmax(210px, auto)
+      1fr
+      minmax(330px, auto);
+    row-gap: 8px;
+  }
+
+  .nav-links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+    flex-wrap: wrap;
+    column-gap: clamp(14px, 2vw, 26px);
+    row-gap: 2px;
+    width: 100%;
+  }
+
+  .nav-controls {
+    grid-column: 3;
+    grid-row: 1;
+  }
+
+  .brand-link {
+    grid-column: 1;
+    grid-row: 1;
+  }
+}
+
+@media (max-width: 1050px) {
+  .navbar {
+    grid-template-columns:
+      minmax(190px, 1fr)
+      minmax(320px, auto);
+  }
+
+  .nav-controls {
+    grid-column: 2;
+  }
+
+  .nav-links {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-link,
+  .nav-controls,
+  .nav-links {
+    grid-column: 1;
+  }
+
+  .brand-link {
+    grid-row: 1;
+  }
+
+  .nav-controls {
+    grid-row: 2;
+  }
+
+  .nav-links {
+    grid-row: 3;
+  }
+}
+
+
+
+/* ============================================================
+   FINAL DESKTOP NAVBAR FIX — LONG INDIAN LANGUAGE LABELS
+   ============================================================ */
+
+.navbar {
+  grid-template-columns:
+    minmax(205px, 0.72fr)
+    minmax(0, 1.75fr)
+    minmax(360px, 0.92fr);
+  gap: clamp(12px, 1.25vw, 22px);
+  padding-left: clamp(18px, 3vw, 52px);
+  padding-right: clamp(18px, 3vw, 52px);
+}
+
+.nav-links {
+  min-width: 0;
+  gap: clamp(12px, 1.45vw, 25px);
+}
+
+.nav-links a {
+  font-size: clamp(0.84rem, 0.82vw, 0.96rem);
+}
+
+.nav-controls {
+  min-width: 360px;
+  gap: 10px;
+}
+
+.nav-model-wrap {
+  flex: 0 0 190px;
+  min-width: 190px;
+  max-width: 190px;
+}
+
+.model-mode-hint {
+  display: none !important;
+}
+
+.nav-language-wrap {
+  flex: 0 0 160px;
+  width: 160px;
+  min-width: 160px;
+  max-width: 160px;
+  overflow: hidden;
+}
+
+.language-selector {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 10px 24px 10px 0;
+  font-family:
+    "Noto Sans Malayalam",
+    "Noto Sans",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  font-size: 0.88rem;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+}
+
+.language-selector option {
+  font-family:
+    "Noto Sans Malayalam",
+    "Noto Sans",
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+}
+
+/* At normal laptop/desktop widths, put navigation on a clean second row
+   before any Malayalam text can collide with the controls. */
+@media (max-width: 1650px) {
+  .navbar {
+    grid-template-columns:
+      minmax(220px, 1fr)
+      minmax(360px, auto);
+    row-gap: 5px;
+    padding-top: 9px;
+    padding-bottom: 8px;
+  }
+
+  .brand-link {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .nav-controls {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .nav-links {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    width: 100%;
+    justify-content: center;
+    flex-wrap: wrap;
+    column-gap: clamp(22px, 3vw, 48px);
+    row-gap: 0;
+  }
+}
+
+@media (max-width: 900px) {
+  .navbar {
+    grid-template-columns: 1fr;
+  }
+
+  .brand-link {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .nav-controls {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: stretch;
+    min-width: 0;
+    width: 100%;
+  }
+
+  .nav-links {
+    grid-column: 1;
+    grid-row: 3;
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .nav-controls {
+    flex-wrap: wrap;
+  }
+
+  .nav-model-wrap,
+  .nav-language-wrap {
+    flex: 1 1 100%;
+    width: 100%;
+    min-width: 0;
+    max-width: none;
   }
 }

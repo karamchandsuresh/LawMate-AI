@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "../context/LanguageContext";
+import { useAIModel } from "../context/AIModelContext";
 import { featureTranslations } from "../context/featureTranslations";
 import "./Complaint.css";
 
@@ -10,6 +11,7 @@ const API_BASE_URL =
 function Complaint() {
   const evidenceInputRef = useRef(null);
   const { language } = useLanguage();
+  const { aiMode } = useAIModel();
   const text =
     featureTranslations[language]?.complaint ||
     featureTranslations.en.complaint;
@@ -156,6 +158,7 @@ function Complaint() {
     });
 
     requestData.append("language", language);
+    requestData.append("ai_mode", aiMode);
 
     evidenceFiles.forEach((file) => {
       requestData.append("evidence_files", file);

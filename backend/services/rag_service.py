@@ -2,38 +2,8 @@ import os
 import chromadb
 
 from sentence_transformers import SentenceTransformer
-from dotenv import load_dotenv
-from google import genai
 
-
-# ============================================================
-# LOAD ENVIRONMENT VARIABLES
-# ============================================================
-
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv(
-    "GEMINI_API_KEY"
-)
-
-if not GEMINI_API_KEY:
-    raise ValueError(
-        "GEMINI_API_KEY not found. "
-        "Please add it to backend/.env"
-    )
-
-
-# ============================================================
-# INITIALIZE GEMINI
-# ============================================================
-
-print("Connecting to Gemini...")
-
-gemini_client = genai.Client(
-    api_key=GEMINI_API_KEY
-)
-
-print("Gemini connected.")
+from services.llm_service import generate_ai_response
 
 
 # ============================================================
@@ -162,7 +132,7 @@ def build_context(
     metadatas
 ):
     """
-    Build structured legal context for Gemini.
+    Build structured legal context for the selected AI model.
 
     Each retrieved chunk includes source information
     so Gemini can provide meaningful references.
@@ -232,7 +202,8 @@ Legal Text:
 
 def generate_answer(
     question,
-    context
+    context,
+    model_mode="auto",
 ):
     """
     Generate a grounded legal answer using
@@ -322,14 +293,12 @@ State briefly that this is legal information and not
 professional legal advice.
 """
 
-    response = (
-        gemini_client.models.generate_content(
-            model="gemini-3.1-flash-lite",
-            contents=prompt
-        )
+    result = generate_ai_response(
+        prompt=prompt,
+        mode=model_mode,
     )
 
-    return response.text
+    return result
 
 
 # ============================================================
@@ -390,7 +359,8 @@ def format_sources(
 
 def rag_query(
     question,
-    top_k=3
+    top_k=3,
+    model_mode="auto",
 ):
     """
     Complete LawMate AI RAG pipeline.
@@ -403,7 +373,7 @@ def rag_query(
         ↓
     Source-aware legal context
         ↓
-    Gemini
+    Selected AI model
         ↓
     Grounded answer + references
     """
@@ -437,7 +407,10 @@ def rag_query(
                 "LawMate AI knowledge base."
             ),
 
-            "sources": []
+            "sources": [],
+            "provider": None,
+            "requested_mode": model_mode,
+            "fallback_used": False,
         }
 
     # --------------------------------------------------------
@@ -454,10 +427,13 @@ def rag_query(
     # STEP 4 — GENERATE ANSWER
     # --------------------------------------------------------
 
-    answer = generate_answer(
+    generation_result = generate_answer(
         question,
-        context
+        context,
+        model_mode=model_mode,
     )
+
+    answer = generation_result["text"]
 
     # --------------------------------------------------------
     # STEP 5 — FORMAT SOURCES
@@ -476,7 +452,10 @@ def rag_query(
     return {
         "question": question,
         "answer": answer,
-        "sources": sources
+        "sources": sources,
+        "provider": generation_result["provider"],
+        "requested_mode": generation_result["requested_mode"],
+        "fallback_used": generation_result["fallback_used"],
     }
 
 

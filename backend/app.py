@@ -9,11 +9,13 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from dotenv import load_dotenv
-from google import genai
+from pydantic import BaseModel, Field
 
 from services.rag_service import rag_query
+from services.llm_service import (
+    generate_ai_response,
+    normalize_llm_mode,
+)
 from services.document_analyzer import (
     process_document,
     extract_text_from_file,
@@ -24,34 +26,6 @@ from services.multilingual_service import (
     prepare_multilingual_response,
 )
 from services.case_predictor import assess_case
-
-
-# ============================================================
-# ENVIRONMENT VARIABLES
-# ============================================================
-
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv(
-    "GEMINI_API_KEY"
-)
-
-if not GEMINI_API_KEY:
-    raise ValueError(
-        "GEMINI_API_KEY not found in backend/.env"
-    )
-
-
-# ============================================================
-# GEMINI CONFIGURATION
-# ============================================================
-
-# This model already worked successfully with your API key.
-ROUTER_MODEL = "gemini-3.1-flash-lite"
-
-gemini_client = genai.Client(
-    api_key=GEMINI_API_KEY
-)
 
 
 # ============================================================
@@ -100,8 +74,18 @@ app.add_middleware(
 # REQUEST MODEL
 # ============================================================
 
+class ChatHistoryItem(BaseModel):
+    sender: str
+    text: str
+
+
 class ChatRequest(BaseModel):
     message: str
+    ai_mode: str = "auto"
+    language: str = "en"
+    history: list[ChatHistoryItem] = Field(
+        default_factory=list
+    )
 
 
 class ComplaintRequest(BaseModel):
@@ -126,6 +110,7 @@ class CaseAssessmentRequest(BaseModel):
     evidence_summary: str = ""
     desired_outcome: str = ""
     language: str = "en"
+    ai_mode: str = "auto"
 
 
 LANGUAGE_CODE_MAP = {
@@ -247,20 +232,241 @@ def is_greeting(message):
 
 
 # ============================================================
+# CONVERSATION CONTEXT
+# ============================================================
+
+def build_history_text(history):
+    """
+    Convert a short recent frontend conversation into a compact
+    context block for follow-up-question resolution.
+    """
+
+    if not history:
+        return ""
+
+    lines = []
+
+    for item in history[-8:]:
+        sender = str(
+            getattr(item, "sender", "")
+        ).strip().lower()
+
+        text = str(
+            getattr(item, "text", "")
+        ).strip()
+
+        if (
+            sender not in {"user", "ai"}
+            or not text
+        ):
+            continue
+
+        # Keep history useful without allowing it to grow without
+        # bound across a long session.
+        text = text[:1800]
+
+        role = (
+            "USER"
+            if sender == "user"
+            else "LAWMATE"
+        )
+
+        lines.append(
+            f"{role}: {text}"
+        )
+
+    return "\n".join(lines)
+
+
+def resolve_follow_up_question(
+    current_question,
+    history,
+    model_mode="auto",
+):
+    """
+    Convert a follow-up such as "Can it be filed online?" into a
+    standalone English question using recent conversation context.
+
+    If there is no useful history, the current question is returned
+    unchanged.
+    """
+
+    history_text = build_history_text(
+        history
+    )
+
+    if not history_text:
+        return current_question
+
+    prompt = f"""
+You are the conversation-context resolver for LawMate AI.
+
+Use the RECENT CONVERSATION only to understand references in the
+CURRENT QUESTION, such as:
+
+it
+this
+that
+they
+the case
+the complaint
+the document
+the section
+the law
+the process
+
+Rewrite the CURRENT QUESTION as one concise standalone English
+question.
+
+IMPORTANT RULES:
+
+1. Do NOT answer the legal question.
+2. Do NOT add facts that are not present in the conversation.
+3. Preserve names, dates, amounts, section numbers, and law names.
+4. If the current question is already standalone, return it unchanged.
+5. Return ONLY the standalone question.
+
+RECENT CONVERSATION:
+
+{history_text}
+
+CURRENT QUESTION:
+
+{current_question}
+"""
+
+    try:
+        result = generate_ai_response(
+            prompt=prompt,
+            mode=model_mode,
+        )
+
+        standalone = (
+            result["text"]
+            .strip()
+            .strip('"')
+        )
+
+        return (
+            standalone
+            if standalone
+            else current_question
+        )
+
+    except Exception as error:
+        print(
+            "Conversation context resolution error:",
+            error,
+        )
+        return current_question
+
+
+# ============================================================
 # INTENT CLASSIFIER
 # ============================================================
 
-def classify_intent(message):
+def classify_intent(
+    message,
+    model_mode="auto",
+):
     """
     Classify a user message into one LawMate workflow.
 
-    Categories:
-    legal_question
-    complaint_request
-    case_assessment
-    document_analysis
-    non_legal
+    Obvious specialized requests are routed locally first.
+    The selected LLM handles ambiguous requests.
     """
+
+    normalized = normalize_message(
+        message
+    )
+
+    # --------------------------------------------------------
+    # FAST LOCAL AGENTIC ROUTING
+    # --------------------------------------------------------
+
+    complaint_terms = {
+        "complaint",
+        "complaint letter",
+        "legal complaint",
+    }
+
+    complaint_actions = {
+        "draft",
+        "write",
+        "create",
+        "generate",
+        "prepare",
+        "make",
+        "file",
+    }
+
+    if (
+        any(
+            term in normalized
+            for term in complaint_terms
+        )
+        and any(
+            action in normalized
+            for action in complaint_actions
+        )
+    ):
+        return "complaint_request"
+
+    case_phrases = {
+        "assess my case",
+        "assess this case",
+        "case assessment",
+        "strength of my case",
+        "strength of the case",
+        "how strong is my case",
+        "will i win my case",
+        "chances of winning",
+        "case outlook",
+    }
+
+    if any(
+        phrase in normalized
+        for phrase in case_phrases
+    ):
+        return "case_assessment"
+
+    document_actions = {
+        "analyze",
+        "analyse",
+        "review",
+        "summarize",
+        "summarise",
+        "explain",
+        "check",
+        "upload",
+    }
+
+    document_terms = {
+        "document",
+        "pdf",
+        "docx",
+        "agreement",
+        "contract",
+        "notice",
+        "image",
+        "file",
+    }
+
+    if (
+        any(
+            action in normalized
+            for action in document_actions
+        )
+        and any(
+            term in normalized
+            for term in document_terms
+        )
+    ):
+        return "document_analysis"
+
+    # --------------------------------------------------------
+    # MODEL-BASED ROUTING
+    # --------------------------------------------------------
 
     prompt = f"""
 You are the workflow intent router for LawMate AI.
@@ -276,31 +482,29 @@ non_legal
 Definitions:
 
 legal_question:
-The user is asking an ordinary legal question about Indian
-law, rights, procedures, Acts, sections, courts, remedies,
-consumer issues, employment, family law, criminal law,
-civil law, cyber law, property law, or similar topics.
+An ordinary Indian-law question about laws, rights, procedures,
+Acts, sections, courts, remedies, consumer issues, employment,
+family law, criminal law, civil law, cyber law, or property law.
 
 complaint_request:
 The user clearly wants LawMate to create, draft, write,
-prepare, or generate a complaint.
+prepare, file, or generate a complaint.
 
 case_assessment:
 The user clearly wants LawMate to assess the strength,
-weakness, outlook, or overall position of their case.
+weakness, outlook, or overall position of a case.
 
 document_analysis:
 The user wants to upload, review, analyze, explain,
 summarize, or check a document, agreement, notice,
-PDF, DOCX, image, or similar file.
+PDF, DOCX, image, or file.
 
 non_legal:
 The request is unrelated to legal assistance.
 
-Important:
-If the user is only asking a general legal question that
-mentions complaints, cases, or documents, use legal_question
-unless they clearly request one of the specialized workflows.
+If the user only asks a general legal question that mentions
+complaints, cases, or documents, use legal_question unless they
+clearly request a specialized workflow.
 
 USER MESSAGE:
 
@@ -310,41 +514,56 @@ Return ONLY one category.
 """
 
     try:
-        response = gemini_client.models.generate_content(
-            model=ROUTER_MODEL,
-            contents=prompt
+        response = generate_ai_response(
+            prompt=prompt,
+            mode=model_mode,
         )
 
-        intent = response.text.strip().lower()
+        response_text = (
+            response["text"]
+            .strip()
+            .lower()
+        )
 
-        allowed_intents = {
-            "legal_question",
+        allowed_intents = [
             "complaint_request",
             "case_assessment",
             "document_analysis",
             "non_legal",
-        }
+            "legal_question",
+        ]
 
-        if intent in allowed_intents:
-            return intent
+        # Exact response is preferred.
+        if response_text in allowed_intents:
+            return response_text
+
+        # Llama 3.2 3B may occasionally add a sentence around
+        # the requested category. Extract a valid category safely.
+        for intent in allowed_intents:
+            if re.search(
+                rf"\b{re.escape(intent)}\b",
+                response_text,
+            ):
+                return intent
 
         return "legal_question"
 
     except Exception as error:
         print(
             "Intent classification error:",
-            error
+            error,
         )
 
         return "legal_question"
 
 
 # ============================================================
-# GEMINI GENERAL LEGAL FALLBACK
+# GENERAL LEGAL FALLBACK
 # ============================================================
 
 def generate_general_legal_answer(
-    question
+    question,
+    model_mode="auto",
 ):
     """
     Generate a cautious legal answer when LawMate's
@@ -397,14 +616,12 @@ knowledge and has not been verified against LawMate's
 RAG sources.
 """
 
-    response = (
-        gemini_client.models.generate_content(
-            model=ROUTER_MODEL,
-            contents=prompt
-        )
+    response = generate_ai_response(
+        prompt=prompt,
+        mode=model_mode,
     )
 
-    return response.text
+    return response
 
 
 # ============================================================
@@ -570,11 +787,22 @@ def chat(request: ChatRequest):
 
     original_message = request.message.strip()
 
+    try:
+        model_mode = normalize_llm_mode(
+            request.ai_mode
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
     print()
     print("=" * 70)
     print("LAWMATE AI CHAT")
     print("=" * 70)
     print("User:", original_message)
+    print("AI mode:", model_mode)
 
     if not original_message:
         return {
@@ -589,19 +817,40 @@ def chat(request: ChatRequest):
     # English before intent classification and RAG retrieval.
     try:
         multilingual_input = prepare_multilingual_query(
-            original_message
+            original_message,
+            model_mode=model_mode,
         )
-        user_language = multilingual_input["language"]
+        detected_language = multilingual_input["language"]
         message = multilingual_input["english_text"]
     except Exception as error:
         print("Multilingual input error:", error)
-        user_language = "english"
+        detected_language = "english"
         message = original_message
 
-    print("Detected language:", user_language)
+    response_language = resolve_response_language(
+        request.language
+    )
 
-    if user_language != "english":
+    print("Detected language:", detected_language)
+    print("Response language:", response_language)
+
+    if detected_language != "english":
         print("English query:", message)
+
+    # Resolve multi-turn follow-up questions before routing and RAG.
+    standalone_message = resolve_follow_up_question(
+        message,
+        request.history,
+        model_mode=model_mode,
+    )
+
+    if standalone_message != message:
+        print(
+            "Contextualized query:",
+            standalone_message,
+        )
+
+    message = standalone_message
 
     # Greeting detection is performed on the English form so
     # greetings in supported languages can use the same logic.
@@ -618,7 +867,8 @@ def chat(request: ChatRequest):
         try:
             reply = prepare_multilingual_response(
                 english_reply,
-                user_language
+                response_language,
+                model_mode=model_mode,
             )
         except Exception as error:
             print("Greeting translation error:", error)
@@ -629,12 +879,15 @@ def chat(request: ChatRequest):
             "mode": "greeting",
             "grounded": False,
             "sources": [],
-            "language": user_language,
+            "language": response_language,
         }
 
     print("Classifying user intent...")
 
-    intent = classify_intent(message)
+    intent = classify_intent(
+        message,
+        model_mode=model_mode,
+    )
 
     print("Intent:", intent)
 
@@ -650,7 +903,8 @@ def chat(request: ChatRequest):
         try:
             reply = prepare_multilingual_response(
                 english_reply,
-                user_language
+                response_language,
+                model_mode=model_mode,
             )
         except Exception as error:
             print(
@@ -664,7 +918,7 @@ def chat(request: ChatRequest):
             "mode": "route",
             "grounded": False,
             "sources": [],
-            "language": user_language,
+            "language": response_language,
             "route": "/complaint",
             "action_label": "Generate Complaint →",
         }
@@ -683,7 +937,8 @@ def chat(request: ChatRequest):
         try:
             reply = prepare_multilingual_response(
                 english_reply,
-                user_language
+                response_language,
+                model_mode=model_mode,
             )
         except Exception as error:
             print(
@@ -697,7 +952,7 @@ def chat(request: ChatRequest):
             "mode": "route",
             "grounded": False,
             "sources": [],
-            "language": user_language,
+            "language": response_language,
             "route": "/case-assessment",
             "action_label": "Assess My Case →",
         }
@@ -715,7 +970,8 @@ def chat(request: ChatRequest):
         try:
             reply = prepare_multilingual_response(
                 english_reply,
-                user_language
+                response_language,
+                model_mode=model_mode,
             )
         except Exception as error:
             print(
@@ -729,7 +985,7 @@ def chat(request: ChatRequest):
             "mode": "route",
             "grounded": False,
             "sources": [],
-            "language": user_language,
+            "language": response_language,
             "route": "/upload",
             "action_label": "Upload & Analyze Document →",
         }
@@ -749,7 +1005,8 @@ def chat(request: ChatRequest):
         try:
             reply = prepare_multilingual_response(
                 english_reply,
-                user_language
+                response_language,
+                model_mode=model_mode,
             )
         except Exception as error:
             print(
@@ -763,7 +1020,7 @@ def chat(request: ChatRequest):
             "mode": "non_legal",
             "grounded": False,
             "sources": [],
-            "language": user_language,
+            "language": response_language,
         }
 
     print(
@@ -775,7 +1032,8 @@ def chat(request: ChatRequest):
         # unchanged. RAG receives the English query.
         result = rag_query(
             message,
-            top_k=3
+            top_k=3,
+            model_mode=model_mode,
         )
     except Exception as error:
 
@@ -790,7 +1048,8 @@ def chat(request: ChatRequest):
         try:
             reply = prepare_multilingual_response(
                 english_reply,
-                user_language
+                response_language,
+                model_mode=model_mode,
             )
         except Exception:
             reply = english_reply
@@ -800,7 +1059,7 @@ def chat(request: ChatRequest):
             "mode": "error",
             "grounded": False,
             "sources": [],
-            "language": user_language,
+            "language": response_language,
         }
 
     answer = result.get("answer", "")
@@ -815,19 +1074,22 @@ def chat(request: ChatRequest):
             "Verified RAG context insufficient."
         )
         print(
-            "Using Gemini legal fallback..."
+            "Using selected AI provider for legal fallback..."
         )
 
         try:
-            fallback_answer = (
+            fallback_result = (
                 generate_general_legal_answer(
-                    message
+                    message,
+                    model_mode=model_mode,
                 )
             )
+
+            fallback_answer = fallback_result["text"]
         except Exception as error:
 
             print(
-                "Gemini fallback error:",
+                "AI fallback error:",
                 error
             )
 
@@ -841,7 +1103,8 @@ def chat(request: ChatRequest):
             try:
                 reply = prepare_multilingual_response(
                     english_reply,
-                    user_language
+                    response_language,
+                    model_mode=model_mode,
                 )
             except Exception:
                 reply = english_reply
@@ -851,7 +1114,7 @@ def chat(request: ChatRequest):
                 "mode": "insufficient",
                 "grounded": False,
                 "sources": [],
-                "language": user_language,
+                "language": response_language,
             }
 
         english_reply = (
@@ -868,7 +1131,8 @@ def chat(request: ChatRequest):
         try:
             reply = prepare_multilingual_response(
                 english_reply,
-                user_language
+                response_language,
+                model_mode=model_mode,
             )
         except Exception as error:
             print(
@@ -879,10 +1143,13 @@ def chat(request: ChatRequest):
 
         return {
             "reply": reply,
-            "mode": "gemini_fallback",
+            "mode": "ai_fallback",
             "grounded": False,
             "sources": [],
-            "language": user_language,
+            "language": response_language,
+            "provider": fallback_result["provider"],
+            "requested_mode": model_mode,
+            "fallback_used": fallback_result["fallback_used"],
         }
 
     citations = format_verified_sources(
@@ -900,7 +1167,8 @@ def chat(request: ChatRequest):
     try:
         reply = prepare_multilingual_response(
             english_reply,
-            user_language
+            response_language,
+            model_mode=model_mode,
         )
     except Exception as error:
         print(
@@ -918,7 +1186,13 @@ def chat(request: ChatRequest):
         "mode": "rag",
         "grounded": True,
         "sources": sources,
-        "language": user_language,
+        "language": response_language,
+        "provider": result.get("provider"),
+        "requested_mode": model_mode,
+        "fallback_used": result.get(
+            "fallback_used",
+            False,
+        ),
     }
 
 
@@ -942,7 +1216,19 @@ def assess_case_route(request: CaseAssessmentRequest):
     print("Case type:", request.case_type)
 
     response_language = resolve_response_language(request.language)
+
+    try:
+        model_mode = normalize_llm_mode(
+            request.ai_mode
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
     print("Response language:", response_language)
+    print("AI mode:", model_mode)
 
     try:
         result = assess_case(
@@ -952,6 +1238,7 @@ def assess_case_route(request: CaseAssessmentRequest):
             opposite_party=request.opposite_party,
             evidence_summary=request.evidence_summary,
             desired_outcome=request.desired_outcome,
+            model_mode=model_mode,
         )
 
     except ValueError as error:
@@ -980,10 +1267,12 @@ def assess_case_route(request: CaseAssessmentRequest):
             assessment = prepare_multilingual_response(
                 assessment,
                 response_language,
+                model_mode=model_mode,
             )
             prediction_notice = prepare_multilingual_response(
                 prediction_notice,
                 response_language,
+                model_mode=model_mode,
             )
         except Exception as error:
             print("Case assessment translation error:", error)
@@ -997,6 +1286,9 @@ def assess_case_route(request: CaseAssessmentRequest):
         "assessment": assessment,
         "prediction_notice": prediction_notice,
         "language": response_language,
+        "provider": result.get("provider"),
+        "requested_mode": model_mode,
+        "fallback_used": result.get("fallback_used", False),
     }
 
 
@@ -1008,6 +1300,7 @@ def assess_case_route(request: CaseAssessmentRequest):
 async def analyze_document(
     file: UploadFile = File(...),
     language: str = Form("en"),
+    ai_mode: str = Form("auto"),
 ):
     """
     Analyze an uploaded legal document.
@@ -1026,7 +1319,19 @@ async def analyze_document(
     print("=" * 70)
 
     response_language = resolve_response_language(language)
+
+    try:
+        model_mode = normalize_llm_mode(
+            ai_mode
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
     print("Response language:", response_language)
+    print("AI mode:", model_mode)
 
 
     # ========================================================
@@ -1138,7 +1443,8 @@ async def analyze_document(
 
         result = process_document(
             filename,
-            file_bytes
+            file_bytes,
+            model_mode=model_mode,
         )
 
     except ValueError as error:
@@ -1205,6 +1511,7 @@ async def analyze_document(
             analysis = prepare_multilingual_response(
                 analysis,
                 response_language,
+                model_mode=model_mode,
             )
         except Exception as error:
             print("Document analysis translation error:", error)
@@ -1223,6 +1530,9 @@ async def analyze_document(
             "PNG",
         ],
         "language": response_language,
+        "provider": result.get("provider"),
+        "requested_mode": model_mode,
+        "fallback_used": result.get("fallback_used", False),
     }
 
 # ============================================================
@@ -1241,6 +1551,7 @@ def classify_evidence_relevance(
     problem_description,
     filename,
     extracted_text,
+    model_mode="auto",
 ):
     """
     Assess apparent relevance only.
@@ -1313,9 +1624,9 @@ RECOMMENDATION: one short sentence
 """
 
     try:
-        response = gemini_client.models.generate_content(
-            model=ROUTER_MODEL,
-            contents=prompt,
+        response = generate_ai_response(
+            prompt=prompt,
+            mode=model_mode,
         )
 
         relevance = "possibly relevant"
@@ -1328,7 +1639,7 @@ RECOMMENDATION: one short sentence
             "whether to attach it."
         )
 
-        for line in response.text.splitlines():
+        for line in response["text"].splitlines():
             cleaned = line.strip()
             lower = cleaned.lower()
 
@@ -1390,6 +1701,7 @@ async def generate_complaint_route(
     evidence: str = Form(""),
     desired_relief: str = Form(""),
     language: str = Form("en"),
+    ai_mode: str = Form("auto"),
     evidence_files: list[UploadFile] | None = File(None),
 ):
     """
@@ -1415,8 +1727,19 @@ async def generate_complaint_route(
     desired_relief = desired_relief.strip()
     response_language = resolve_response_language(language)
 
+    try:
+        model_mode = normalize_llm_mode(
+            ai_mode
+        )
+    except ValueError as error:
+        raise HTTPException(
+            status_code=400,
+            detail=str(error),
+        )
+
     print("Complaint type:", complaint_type)
     print("Response language:", response_language)
+    print("AI mode:", model_mode)
 
     uploaded_files = [
         file
@@ -1497,6 +1820,7 @@ async def generate_complaint_route(
             problem_description=problem_description,
             filename=filename,
             extracted_text=extracted_text,
+            model_mode=model_mode,
         )
 
         relevance["characters_extracted"] = len(extracted_text)
@@ -1531,6 +1855,7 @@ async def generate_complaint_route(
             desired_relief=desired_relief,
             uploaded_evidence_text=uploaded_evidence_text,
             uploaded_evidence_files=evidence_filenames,
+            model_mode=model_mode,
         )
 
     except ValueError as error:
@@ -1564,10 +1889,12 @@ async def generate_complaint_route(
             draft = prepare_multilingual_response(
                 draft,
                 response_language,
+                model_mode=model_mode,
             )
             evidence_notice = prepare_multilingual_response(
                 evidence_notice,
                 response_language,
+                model_mode=model_mode,
             )
 
             for evidence_result in evidence_results:
@@ -1575,6 +1902,7 @@ async def generate_complaint_route(
                     evidence_result["status"] = prepare_multilingual_response(
                         evidence_result["status"],
                         response_language,
+                        model_mode=model_mode,
                     )
 
         except Exception as error:
@@ -1589,4 +1917,7 @@ async def generate_complaint_route(
         "evidence_files": evidence_results,
         "evidence_notice": evidence_notice,
         "language": response_language,
+        "provider": result.get("provider"),
+        "requested_mode": model_mode,
+        "fallback_used": result.get("fallback_used", False),
     }

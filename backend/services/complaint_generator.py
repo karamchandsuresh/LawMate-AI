@@ -1,32 +1,4 @@
-import os
-
-from dotenv import load_dotenv
-from google import genai
-
-
-# ============================================================
-# ENVIRONMENT VARIABLES
-# ============================================================
-
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
-if not GEMINI_API_KEY:
-    raise ValueError(
-        "GEMINI_API_KEY not found in backend/.env"
-    )
-
-
-# ============================================================
-# GEMINI CONFIGURATION
-# ============================================================
-
-GEMINI_MODEL = "gemini-3.1-flash-lite"
-
-gemini_client = genai.Client(
-    api_key=GEMINI_API_KEY
-)
+from services.llm_service import generate_ai_response
 
 
 # ============================================================
@@ -99,6 +71,7 @@ def generate_complaint(
     desired_relief="",
     uploaded_evidence_text="",
     uploaded_evidence_files=None,
+    model_mode="auto",
 ):
     """
     Generate a structured complaint draft.
@@ -335,15 +308,18 @@ State that LawMate provides drafting assistance and does not
 replace professional legal advice.
 """
 
-    response = gemini_client.models.generate_content(
-        model=GEMINI_MODEL,
-        contents=prompt,
+    generation_result = generate_ai_response(
+        prompt=prompt,
+        mode=model_mode,
     )
 
     return {
         "complaint_type": complaint_type,
         "complaint_label": complaint_label,
-        "draft": response.text,
+        "draft": generation_result["text"],
+        "provider": generation_result["provider"],
+        "requested_mode": generation_result["requested_mode"],
+        "fallback_used": generation_result["fallback_used"],
     }
 
 

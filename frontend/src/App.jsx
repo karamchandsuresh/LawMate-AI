@@ -1,5 +1,6 @@
 import "./App.css";
 import { LanguageProvider } from "./context/LanguageContext";
+import { AIModelProvider } from "./context/AIModelContext";
 
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
@@ -105,7 +106,9 @@ function App() {
 
     <BrowserRouter>
       <LanguageProvider>
-        <AppContent />
+        <AIModelProvider>
+          <AppContent />
+        </AIModelProvider>
       </LanguageProvider>
     </BrowserRouter>
 

@@ -9,35 +9,7 @@ pytesseract.pytesseract.tesseract_cmd = (
     r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 )
 
-from dotenv import load_dotenv
-from google import genai
-
-
-# ============================================================
-# ENVIRONMENT
-# ============================================================
-
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv(
-    "GEMINI_API_KEY"
-)
-
-if not GEMINI_API_KEY:
-    raise ValueError(
-        "GEMINI_API_KEY not found in backend/.env"
-    )
-
-
-# ============================================================
-# GEMINI
-# ============================================================
-
-GEMINI_MODEL = "gemini-3.1-flash-lite"
-
-gemini_client = genai.Client(
-    api_key=GEMINI_API_KEY
-)
+from services.llm_service import generate_ai_response
 
 
 # ============================================================
@@ -293,7 +265,8 @@ def extract_text_from_file(
 
 def analyze_legal_document(
     filename,
-    extracted_text
+    extracted_text,
+    model_mode="auto",
 ):
     """
     Analyze extracted legal-document text with Gemini.
@@ -398,14 +371,12 @@ for educational assistance and does not replace
 professional legal advice.
 """
 
-    response = (
-        gemini_client.models.generate_content(
-            model=GEMINI_MODEL,
-            contents=prompt
-        )
+    generation_result = generate_ai_response(
+        prompt=prompt,
+        mode=model_mode,
     )
 
-    return response.text
+    return generation_result
 
 
 # ============================================================
@@ -414,7 +385,8 @@ professional legal advice.
 
 def process_document(
     filename,
-    file_bytes
+    file_bytes,
+    model_mode="auto",
 ):
     """
     Complete pipeline:
@@ -444,10 +416,11 @@ def process_document(
             "readable text for analysis."
         )
 
-    analysis = (
+    generation_result = (
         analyze_legal_document(
             filename,
-            extracted_text
+            extracted_text,
+            model_mode=model_mode,
         )
     )
 
@@ -456,7 +429,10 @@ def process_document(
         "characters_extracted": len(
             extracted_text
         ),
-        "analysis": analysis,
+        "analysis": generation_result["text"],
+        "provider": generation_result["provider"],
+        "requested_mode": generation_result["requested_mode"],
+        "fallback_used": generation_result["fallback_used"],
     }
 
 

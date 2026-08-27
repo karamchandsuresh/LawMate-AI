@@ -1,6 +1,7 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import { useLanguage } from "../context/LanguageContext";
+import { useAIModel } from "../context/AIModelContext";
 import { featureTranslations } from "../context/featureTranslations";
 import "./CaseAssessment.css";
 
@@ -9,6 +10,7 @@ const API_BASE_URL =
 
 function CaseAssessment() {
   const { language } = useLanguage();
+  const { aiMode } = useAIModel();
   const text = featureTranslations[language]?.caseAssessment || featureTranslations.en.caseAssessment;
 
   const [formData, setFormData] = useState({
@@ -47,7 +49,11 @@ function CaseAssessment() {
       const response = await fetch(`${API_BASE_URL}/assess-case`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, language }),
+        body: JSON.stringify({
+          ...formData,
+          language,
+          ai_mode: aiMode,
+        }),
       });
 
       const data = await response.json();
